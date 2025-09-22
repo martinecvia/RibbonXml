@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36301.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared", "Shared\Shared.shproj", "{E12BFDD6-C393-4D7C-A138-72372C23BBBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AcadNet46", "References\AcadNet46\AcadNet46.csproj", "{E1194111-944E-4412-B60E-3324212F4B67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZcadNet47", "References\ZcadNet47\ZcadNet47.csproj", "{15F78CE7-05B5-46A5-A435-561D786C83F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AcadNet80", "References\AcadNet80\AcadNet80.csproj", "{42565C14-FDAB-4A45-9A83-7A7763F73BD3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E1194111-944E-4412-B60E-3324212F4B67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1194111-944E-4412-B60E-3324212F4B67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1194111-944E-4412-B60E-3324212F4B67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1194111-944E-4412-B60E-3324212F4B67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15F78CE7-05B5-46A5-A435-561D786C83F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15F78CE7-05B5-46A5-A435-561D786C83F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15F78CE7-05B5-46A5-A435-561D786C83F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15F78CE7-05B5-46A5-A435-561D786C83F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42565C14-FDAB-4A45-9A83-7A7763F73BD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42565C14-FDAB-4A45-9A83-7A7763F73BD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42565C14-FDAB-4A45-9A83-7A7763F73BD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42565C14-FDAB-4A45-9A83-7A7763F73BD3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4C5E8B9-F08E-49C5-A84B-D3D991A4D759}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Shared\Shared.projitems*{e12bfdd6-c393-4d7c-a138-72372c23bbbc}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal
