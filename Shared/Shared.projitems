@@ -11,6 +11,15 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)BaseRibbonXml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CommandHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Component.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\ProgressBarSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\RibbonButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\RibbonCheckBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\RibbonListButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\RibbonMenuItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\RibbonToggleButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonCommandItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonLabel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonPanelBreak.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonRowBreak.cs" />
@@ -28,7 +37,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)XmlOutAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Items\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Items\CommandItems\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\{0c615a0b-631a-45ac-9e41-d37ec56c5f8c}" />

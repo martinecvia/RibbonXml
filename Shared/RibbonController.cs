@@ -1,6 +1,5 @@
 ﻿using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
-using System.Linq; // Keep for .NET 4.6
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
 #if ZWCAD
@@ -45,6 +44,8 @@ namespace RibbonXml
         /// </summary>
         public static CommandHandler GetHandler(string command)
         {
+            if (string.IsNullOrEmpty(command))
+                return null;
             if (def == null)
                 throw new InvalidOperationException("RibbonDef instance is not built yet.");
             if (def._handlers.TryGetValue(command, out CommandHandler handler))
@@ -136,6 +137,13 @@ namespace RibbonXml
         }
         #endregion
         private static RibbonDef def { get; set; }
-        private static RibbonDef DefPtr(RibbonDef instance) => def = instance;
+        private static RibbonDef DefPtr(RibbonDef instance)
+        {
+            if (instance == null)
+                throw new InvalidOperationException("RibbonDef instance is not allowed to be built reflectively.");
+            if (def == null)
+                def = instance;
+            return def;
+        }
     }
 }

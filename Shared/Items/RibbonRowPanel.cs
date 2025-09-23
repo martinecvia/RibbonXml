@@ -11,6 +11,8 @@ using Autodesk.Windows;
 #endif
 #endregion
 
+using RibbonXml.Items.CommandItems;
+
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonRowPanel

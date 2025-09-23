@@ -1,5 +1,4 @@
 ﻿using System; // Keep for .NET 4.6
-using System.Diagnostics;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
 #if ZWCAD
@@ -57,9 +56,8 @@ namespace RibbonXml
 
             public override void Execute(object _)
             {
-                var _document = AcApp.Application.DocumentManager.MdiActiveDocument;
-                _document?.SendStringToExecute($"{_command} ", true, false, true);
-                Debug.WriteLine($"[&] Attempted {_command}");
+                AcApp.Application.DocumentManager.MdiActiveDocument?
+                    .SendStringToExecute($"{_command} ", true, false, true);
             }
         }
     }

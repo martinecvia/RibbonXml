@@ -1,4 +1,5 @@
 using System; // Keep for .NET 4.6
+using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
 using System.Windows;
 using System.Xml;
@@ -11,6 +12,8 @@ using ZwSoft.Windows;
 using Autodesk.Windows;
 #endif
 #endregion
+
+using RibbonXml.Items.CommandItems;
 
 namespace RibbonXml.Items
 {
@@ -148,7 +151,6 @@ namespace RibbonXml.Items
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCombo
         public class RibbonComboDef : RibbonListDef
         {
-
             [XmlOut]
             [XmlAttribute("Current")]
             [DefaultValue("")]
@@ -380,7 +382,6 @@ namespace RibbonXml.Items
         [XmlIgnore]
         public static readonly Dictionary<Type, Func<RibbonCombo>> ListFactory = new Dictionary<Type, Func<RibbonCombo>>()
         {
-            // RibbonItem
             { typeof(RibbonComboDef), () => new RibbonCombo() },
             { typeof(RibbonComboDef.RibbonGalleryDef), () => new RibbonGallery() },
         };

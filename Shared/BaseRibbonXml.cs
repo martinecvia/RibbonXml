@@ -1,10 +1,13 @@
 using System; // Keep for .NET 4.6
 using System.Collections;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq; // Keep for .NET 4.6
 using System.Reflection;
 using System.Xml.Serialization;
+
+#if DEBUG
+using System.Diagnostics;
+#endif
 
 namespace RibbonXml
 {
@@ -126,7 +129,9 @@ namespace RibbonXml
                     // Property not found in API
                     if (targetProperty == null)
                     {
+#if DEBUG
                         Debug.WriteLine($"[&] Transform: {target.GetType().Name}:{sourceProperty.Name} was not found");
+#endif
                         continue;
                     }
                     if (sourceProperty.GetMethod == null || sourceProperty.GetMethod.GetMethodBody() == null)
@@ -157,8 +162,10 @@ namespace RibbonXml
                     }
                     else
                     {
+#if DEBUG
                         Debug.WriteLine($"[&] {sourceProperty.Name}: " +
                             $"Has different type target:{targetProperty.PropertyType} from source:{sourceProperty.PropertyType}");
+#endif
                     }
                 }
                 catch (System.Exception) // Keep for .NET 4.6
