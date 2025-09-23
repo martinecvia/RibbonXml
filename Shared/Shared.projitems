@@ -9,6 +9,29 @@
     <Import_RootNamespace>Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)RibbonXml\CommandHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BaseRibbonXml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CommandHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonPanelBreak.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonRowBreak.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonRowPanel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonSeparator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonSlider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonSpinner.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)items\RibbonTextBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RibbonController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RibbonItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RibbonPanel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RibbonPanelSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RibbonSubPanelSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RibbonTab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)XmlOutAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Items\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\{0c615a0b-631a-45ac-9e41-d37ec56c5f8c}" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\{fe5f6970-c86a-4119-ad96-a01ba4b2542b}" />
   </ItemGroup>
 </Project>
