@@ -1,8 +1,10 @@
 using System; // Keep for AutoCAD & .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Xml; // Keep for AutoCAD
 using System.Xml.Serialization; // Keep for AutoCAD
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items.CommandItems
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_ProgressBarSource
@@ -38,8 +40,29 @@ namespace RibbonXml.Items.CommandItems
         [DefaultValue(false)]
         public bool HasCancelButton { get; set; } = false;
 
+        [XmlOut]
+        [XmlAttribute("CurrentOperation")]
+        [DefaultValue("")]
+        public string CurrentOperation { get; set; } = string.Empty;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(100d)]
+        public double MaximumValue { get; set; } = 100d;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(0.0d)]
+        public double MinimumValue { get; set; } = 0.0d;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(0.0d)]
+        public double CurrentValue { get; set; } = 0.0d;
+
+        #region INTERNALS
         [XmlAttribute("HasCancelButton")]
-        public string HasCancelButtonDef
+        internal string m_HasCancelButtonSerializable
         {
             get => HasCancelButton.ToString();
             set
@@ -54,13 +77,8 @@ namespace RibbonXml.Items.CommandItems
             }
         }
 
-        [XmlOut]
-        [XmlAttribute("CurrentOperation")]
-        [DefaultValue("")]
-        public string CurrentOperation { get; set; } = string.Empty;
-
         [XmlElement("CurrentOperation")]
-        public XmlCDataSection CurrentOperationCData
+        internal XmlCDataSection m_CurrentOperationCData
         {
             get
             {
@@ -71,13 +89,8 @@ namespace RibbonXml.Items.CommandItems
             set { CurrentOperation = value?.Value ?? string.Empty; }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(100d)]
-        public double MaximumValue { get; set; } = 100d;
-
         [XmlAttribute("MaximumValue")]
-        public string MaximumValueDef
+        internal string m_MaximumValueSerializable
         {
             get => MaximumValue.ToString();
             set
@@ -97,13 +110,8 @@ namespace RibbonXml.Items.CommandItems
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(0.0d)]
-        public double MinimumValue { get; set; } = 0.0d;
-
         [XmlAttribute("MinimumValue")]
-        public string MinimumValueDef
+        internal string m_MinimumValueSerializable
         {
             get => MinimumValue.ToString();
             set
@@ -123,13 +131,8 @@ namespace RibbonXml.Items.CommandItems
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(0.0d)]
-        public double CurrentValue { get; set; } = 0.0d;
-
         [XmlAttribute("CurrentValue")]
-        public string CurrentValueDef
+        internal string m_CurrentValueSerializable
         {
             get => CurrentValue.ToString();
             set
@@ -149,6 +152,7 @@ namespace RibbonXml.Items.CommandItems
                 CurrentValue = MinimumValue;
             }
         }
+        #endregion
 #endif
     }
 }

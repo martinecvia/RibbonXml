@@ -1,6 +1,7 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows.Media;
 using System.Xml;
 using System.Xml.Serialization;
@@ -20,6 +21,7 @@ using Autodesk.Windows.ToolBars;
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem
@@ -72,18 +74,6 @@ namespace RibbonXml
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_Text
         public string Text { get; set; } = null;
 
-        [XmlElement("Text")]
-        public XmlCDataSection TextCData
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(Text))
-                    return null;
-                return new XmlDocument().CreateCDataSection(Text);
-            }
-            set { Text = value?.Value; }
-        }
-
         [XmlOut]
         [XmlIgnore]
         [DefaultValue(null)]
@@ -107,14 +97,7 @@ namespace RibbonXml
         /// <example>
         /// Example: <c>Image="icon_button_save"</c> (resolved as icon_button_save.png or .ico from resources)
         /// </example>
-        public ImageSource LargeImage { get; set; } = RibbonDef.GetImageSource("{fe5f6970-c86a-4119-ad96-a01ba4b2542b}");
-
-        [XmlAttribute("LargeImage")]
-        public string LargeImageDef
-        {
-            get => LargeImage?.ToString() ?? "";
-            set => LargeImage = RibbonDef.GetImageSource(value ?? "{fe5f6970-c86a-4119-ad96-a01ba4b2542b}");
-        }
+        public ImageSource LargeImage { get; set; } = null;
 
         [XmlOut]
         [XmlAttribute("KeyTip")]
@@ -150,14 +133,7 @@ namespace RibbonXml
         /// <example>
         /// Example: <c>Image="icon_button_save"</c> (resolved as icon_button_save.png or .ico from resources)
         /// </example>
-        public ImageSource Image { get; set; } = RibbonDef.GetImageSource("{0c615a0b-631a-45ac-9e41-d37ec56c5f8c}");
-
-        [XmlAttribute("Image")]
-        public string ImageDef
-        {
-            get => Image?.ToString() ?? "";
-            set => Image = RibbonDef.GetImageSource(value ?? "{0c615a0b-631a-45ac-9e41-d37ec56c5f8c}");
-        }
+        public ImageSource Image { get; set; } = null;
 
         [XmlOut]
         [XmlAttribute("Tag")]
@@ -200,23 +176,6 @@ namespace RibbonXml
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_IsToolTipEnabled
         public bool IsToolTipEnabled { get; set; } = true;
 
-        [XmlAttribute("IsToolTipEnabled")]
-        public string IsToolTipEnabledDef
-        {
-            get => IsToolTipEnabled.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    // Passing the default value
-                    IsToolTipEnabled = true;
-                    return;
-                }
-                IsToolTipEnabled
-                    = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
-
         [XmlOut]
         [XmlAttribute("ToolTip")]
         [DefaultValue(null)]
@@ -241,22 +200,6 @@ namespace RibbonXml
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_ShowImage
         public bool ShowImage { get; set; } = true;
 
-        [XmlAttribute("ShowImage")]
-        public string ShowImageDef
-        {
-            get => ShowImage.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    // Passing the default value
-                    ShowImage = true;
-                    return;
-                }
-                ShowImage = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
-
         [XmlOut]
         [XmlIgnore]
         [DefaultValue(100d)]
@@ -272,22 +215,6 @@ namespace RibbonXml
             "The default value is 100.")]
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_MinWidth
         public double MinWidth { get; set; } = 100d;
-
-        [XmlAttribute("MinWidth")]
-        public string MinWidthDef
-        {
-            get => MinWidth.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value)) return;
-                if (double.TryParse(value, out var result))
-                {
-                    MinWidth = result;
-                    return;
-                }
-                MinWidth = 100d;
-            }
-        }
 
         [XmlOut]
         [XmlIgnore]
@@ -305,8 +232,164 @@ namespace RibbonXml
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_Width
         public double Width { get; set; } = 200d;
 
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(RibbonItemResizeStyles.ResizeWidth)]
+        public RibbonItemResizeStyles ResizeStyle { get; set; } = RibbonItemResizeStyles.ResizeWidth;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(RibbonItemSize.Standard)]
+        [Description("Gets or sets the size with which the item is displayed. " +
+            "This property is supported only by RibbonButton and RibbonLabel as well as classes derived from them. " +
+            "Other ribbon items will ignore this property. " +
+            "The default value is Standard.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_Size
+        public RibbonItemSize Size { get; set; } = RibbonItemSize.Standard;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(false)]
+        [Description("Gets or sets the value indicating whether the item text is visible. " +
+            "If the value is true, the text for the item is visible in the ribbon, provided that a valid text has been set for this item with the Text property. " +
+            "If the value is false, the text is not visible in the ribbon. " +
+            "The default value is false. " +
+            "Derived classes may override this default.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_ShowText
+        public bool ShowText { get; set; } = false;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(true)]
+        [Description("Gets or sets the value to indicating whether the item is visible in the ribbon. " +
+            "If this property is true, the item is visible in the ribbon; otherwise, the item is hidden in ribbon and does not occupy any space. " +
+            "The default value is true.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_IsVisible
+        public bool IsVisible { get; set; } = true;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(true)]
+        [Description("Gets or sets the value indicating whether the item is enabled in the ribbon." +
+            "If this property is true, the item is enabled in the ribbon; otherwise, it is disabled. " +
+            "Disabled items do not respond any interaction. " +
+            "The default value is true.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_IsEnabled
+        public bool IsEnabled { get; set; } = true;
+
+        [XmlOut]
+        [XmlAttribute("Description")]
+        [DefaultValue(null)]
+        [Description("Gets or sets the description text for the ribbon item. " +
+            "The description text is used in the application menu, tooltips, and drop-down lists in a RibbonListButton when the list style is set to Descriptive.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_Description
+        public string Description { get; set; } = null;
+
+        [XmlOut]
+        [XmlAttribute("HelpTopic")]
+        [DefaultValue(null)]
+        public string HelpTopic { get; set; } = null;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(true)]
+        public bool ShowToolTipOnDisabled { get; set; } = true;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(true)]
+        public bool AllowInToolBar { get; set; } = true;
+
+        #region INTERNALS
+        [XmlElement("Text")]
+        internal XmlCDataSection m_TextCData
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Text))
+                    return null;
+                return new XmlDocument().CreateCDataSection(Text);
+            }
+            set { Text = value?.Value; }
+        }
+
+        [XmlAttribute("LargeImage")]
+        internal string m_LargeImageSerializable
+        {
+            get => LargeImage?.ToString() ?? "";
+            set => LargeImage = RibbonDef.GetImageSource(value ?? "{fe5f6970-c86a-4119-ad96-a01ba4b2542b}");
+        }
+
+        [XmlAttribute("Image")]
+        internal string m_ImageSerializable
+        {
+            get => Image?.ToString() ?? "";
+            set => Image = RibbonDef.GetImageSource(value ?? "{0c615a0b-631a-45ac-9e41-d37ec56c5f8c}");
+        }
+
+        [XmlElement("Tag")]
+        internal XmlCDataSection m_TagCData
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Tag))
+                    return null;
+                return new XmlDocument().CreateCDataSection(Tag);
+            }
+            set { Tag = value?.Value; }
+        }
+
+        [XmlAttribute("IsToolTipEnabled")]
+        internal string m_IsToolTipEnabledSerializable
+        {
+            get => IsToolTipEnabled.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    IsToolTipEnabled = true;
+                    return;
+                }
+                IsToolTipEnabled
+                    = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [XmlAttribute("ShowImage")]
+        internal string m_ShowImageSerializable
+        {
+            get => ShowImage.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    ShowImage = true;
+                    return;
+                }
+                ShowImage = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [XmlAttribute("MinWidth")]
+        internal string m_MinWidthSerializable
+        {
+            get => MinWidth.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value)) return;
+                if (double.TryParse(value, out var result))
+                {
+                    MinWidth = result;
+                    return;
+                }
+                MinWidth = 100d;
+            }
+        }
+
         [XmlAttribute("Width")]
-        public string WidthDef
+        internal string m_WidthSerializable
         {
             get => Width.ToString();
             set
@@ -321,13 +404,8 @@ namespace RibbonXml
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(RibbonItemResizeStyles.ResizeWidth)]
-        public RibbonItemResizeStyles ResizeStyle { get; set; } = RibbonItemResizeStyles.ResizeWidth;
-
         [XmlAttribute("ResizeStyle")]
-        public string ResizeStyleDef
+        internal string m_ResizeStyleSerializable
         {
             get => ResizeStyle.ToString();
             set
@@ -338,19 +416,9 @@ namespace RibbonXml
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(RibbonItemSize.Standard)]
-        [Description("Gets or sets the size with which the item is displayed. " +
-            "This property is supported only by RibbonButton and RibbonLabel as well as classes derived from them. " +
-            "Other ribbon items will ignore this property. " +
-            "The default value is Standard.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_Size
-        public RibbonItemSize Size { get; set; } = RibbonItemSize.Standard;
-
         [XmlAttribute("Size")]
         [XmlOut]
-        public string SizeDef
+        internal string m_SizeSerializable
         {
             get => Size.ToString();
             set
@@ -361,19 +429,8 @@ namespace RibbonXml
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(false)]
-        [Description("Gets or sets the value indicating whether the item text is visible. " +
-            "If the value is true, the text for the item is visible in the ribbon, provided that a valid text has been set for this item with the Text property. " +
-            "If the value is false, the text is not visible in the ribbon. " +
-            "The default value is false. " +
-            "Derived classes may override this default.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_ShowText
-        public bool ShowText { get; set; } = false;
-
         [XmlAttribute("ShowText")]
-        public string ShowTextDef
+        internal string m_ShowTextSerializable
         {
             get => ShowText.ToString();
             set
@@ -388,17 +445,8 @@ namespace RibbonXml
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(true)]
-        [Description("Gets or sets the value to indicating whether the item is visible in the ribbon. " +
-            "If this property is true, the item is visible in the ribbon; otherwise, the item is hidden in ribbon and does not occupy any space. " +
-            "The default value is true.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_IsVisible
-        public bool IsVisible { get; set; } = true;
-
         [XmlAttribute("IsVisible")]
-        public string IsVisibleDef
+        internal string m_IsVisibleSerializable
         {
             get => IsVisible.ToString();
             set
@@ -413,18 +461,8 @@ namespace RibbonXml
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(true)]
-        [Description("Gets or sets the value indicating whether the item is enabled in the ribbon." +
-            "If this property is true, the item is enabled in the ribbon; otherwise, it is disabled. " +
-            "Disabled items do not respond any interaction. " +
-            "The default value is true.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_IsEnabled
-        public bool IsEnabled { get; set; } = true;
-
         [XmlAttribute("IsEnabled")]
-        public string IsEnabledDef
+        internal string m_IsEnabledSerializable
         {
             get => IsEnabled.ToString();
             set
@@ -439,16 +477,8 @@ namespace RibbonXml
             }
         }
 
-        [XmlOut]
-        [XmlAttribute("Description")]
-        [DefaultValue(null)]
-        [Description("Gets or sets the description text for the ribbon item. " +
-            "The description text is used in the application menu, tooltips, and drop-down lists in a RibbonListButton when the list style is set to Descriptive.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem_Description
-        public string Description { get; set; } = null;
-
         [XmlElement("Description")]
-        public XmlCDataSection DescriptionCData
+        internal XmlCDataSection m_DescriptionCData
         {
             get
             {
@@ -459,18 +489,8 @@ namespace RibbonXml
             set { Description = value?.Value ?? string.Empty; }
         }
 
-        [XmlOut]
-        [XmlAttribute("HelpTopic")]
-        [DefaultValue(null)]
-        public string HelpTopic { get; set; } = null;
-
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(true)]
-        public bool ShowToolTipOnDisabled { get; set; } = true;
-
         [XmlAttribute("ShowToolTipOnDisabled")]
-        public string ShowToolTipOnDisabledDef
+        internal string m_ShowToolTipOnDisabledSerializable
         {
             get => ShowToolTipOnDisabled.ToString();
             set
@@ -485,13 +505,8 @@ namespace RibbonXml
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(true)]
-        public bool AllowInToolBar { get; set; } = true;
-
         [XmlAttribute("AllowInToolBar")]
-        public string AllowInToolBarDef
+        internal string m_AllowInToolBarSerializable
         {
             get => AllowInToolBar.ToString();
             set
@@ -505,9 +520,10 @@ namespace RibbonXml
                 AllowInToolBar = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
             }
         }
+        #endregion
 
         [XmlIgnore]
-        public static readonly Dictionary<Type, Func<RibbonItem>> ItemsFactory = new Dictionary<Type, Func<RibbonItem>>()
+        internal static readonly Dictionary<Type, Func<RibbonItem>> ItemsFactory = new Dictionary<Type, Func<RibbonItem>>()
         {
             // RibbonItem
             { typeof(RibbonListDef.RibbonComboDef), () => new RibbonCombo() },

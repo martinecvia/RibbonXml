@@ -1,5 +1,7 @@
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items.CommandItems
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-__MEMBERTYPE_Properties_Autodesk_Windows_RibbonToggleButton
@@ -11,7 +13,8 @@ namespace RibbonXml.Items.CommandItems
         "Please use CheckState as much as possible.")]
     [XmlInclude(typeof(RibbonToggleButtonDef))]
     [XmlInclude(typeof(ToolBarShareButtonDef))]
-    public class RibbonToggleButtonDef : RibbonCommandItemDef
+    public class RibbonToggleButtonDef
+        : RibbonCommandItemDef
     {
         public RibbonToggleButtonDef()
         {

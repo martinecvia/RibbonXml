@@ -3,6 +3,7 @@ using System.Xml;
 using System.ComponentModel;
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.Windows.Markup;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
@@ -16,6 +17,7 @@ using Autodesk.Windows;
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource
@@ -35,6 +37,87 @@ namespace RibbonXml
             set => _cookie = value;
         }
 
+        [XmlOut]
+        [XmlAttribute("Title")]
+        [DefaultValue(null)]
+        [Description("The panel title set with this property is displayed in the panel's title bar in the ribbon. " +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_Title
+        public string Title { get; set; } = null;
+
+        [XmlOut]
+        [XmlAttribute("Name")]
+        [DefaultValue(null)]
+        [Description("Gets or sets the name of the ribbon panel. " +
+            "The framework uses the Title property of the panel to display the panel title in the ribbon. " +
+            "The name property is not currently used by the framework. " +
+            "Applications can use this property to store a longer name for a panel if this is required in other UI customization dialogs. " +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_Name
+        public string Name { get; set; } = null;
+
+        [XmlOut]
+        [XmlAttribute("Description")]
+        [DefaultValue(null)]
+        [Description("Gets or sets the panel description text. " +
+            "The description text is not currently used by the framework. " +
+            "Applications can use this to store a description if it is required in other UI customization dialogs. " +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_Description
+        public string Description { get; set; } = null;
+
+        [XmlOut]
+        [XmlAttribute("Tag")]
+        [DefaultValue(null)]
+        [Description("Gets or sets the custom data object in the panel source. " +
+            "This property can be used to store any object a as custom data object in a panel source. " +
+            "This data is not used by the framework. " +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_Tag
+        public string Tag { get; set; } = null;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(true)]
+        public bool IsSlideOutPanelVisible { get; set; } = true;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(null)]
+        [Description("Gets or sets the command item to be used as the panel's dialog launcher. " +
+            "The dialog launcher is displayed as a small button in the panel title bar. " +
+            "Clicking the button raises a command that follows the standard ribbon command routing. " +
+            "If this property is null the panel does not have a dialog launcher button. " +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_DialogLauncher
+        public RibbonCommandItem DialogLauncher
+        {
+            get
+            {
+                // It must be RibbonButton if you want it to work
+                RibbonButton button = m_DialogLauncher?.Transform(new RibbonButton());
+                if (button != null)
+                {
+                    // DialogLauncher depends on this, thus must be changed
+                    button.MinWidth = 0;
+                    button.Width = double.NaN;
+                }
+                return button;
+            }
+        }
+
+        [XmlOut]
+        [XmlAttribute("KeyTip")]
+        [DefaultValue(null)]
+        [Description("Gets or sets the name of the ribbon panel. " +
+            "The framework uses the Title property of the panel to display the panel title in the ribbon. " +
+            "The name property is not currently used by the framework. " +
+            "Applications can use this property to store a longer name for a panel if this is required in other UI customization dialogs. " +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_KeyTip
+        public string KeyTip { get; set; } = null;
+
+        #region INTERNALS
         #region CONTENT
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonItem
@@ -67,19 +150,14 @@ namespace RibbonXml
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        public List<RibbonItemDef> ItemsDef { get; set; } = new List<RibbonItemDef>();
+        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
+
+        [XmlElement("DialogLauncher")]
+        internal RibbonButtonDef m_DialogLauncher { get; set; } = null;
         #endregion
 
-        [XmlOut]
-        [XmlAttribute("Title")]
-        [DefaultValue(null)]
-        [Description("The panel title set with this property is displayed in the panel's title bar in the ribbon. " +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_Title
-        public string Title { get; set; } = null;
-
         [XmlElement("Title")]
-        public XmlCDataSection TitleCData
+        internal XmlCDataSection m_TitleCData
         {
             get
             {
@@ -90,19 +168,8 @@ namespace RibbonXml
             set { Title = value?.Value; }
         }
 
-        [XmlOut]
-        [XmlAttribute("Name")]
-        [DefaultValue(null)]
-        [Description("Gets or sets the name of the ribbon panel. " +
-            "The framework uses the Title property of the panel to display the panel title in the ribbon. " +
-            "The name property is not currently used by the framework. " +
-            "Applications can use this property to store a longer name for a panel if this is required in other UI customization dialogs. " +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_Name
-        public string Name { get; set; } = null;
-
         [XmlElement("Name")]
-        public XmlCDataSection NameCData
+        internal XmlCDataSection m_NameCData
         {
             get
             {
@@ -113,18 +180,8 @@ namespace RibbonXml
             set { Name = value?.Value; }
         }
 
-        [XmlOut]
-        [XmlAttribute("Description")]
-        [DefaultValue(null)]
-        [Description("Gets or sets the panel description text. " +
-            "The description text is not currently used by the framework. " +
-            "Applications can use this to store a description if it is required in other UI customization dialogs. " +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_Description
-        public string Description { get; set; } = null;
-
         [XmlElement("Description")]
-        public XmlCDataSection DescriptionCData
+        internal XmlCDataSection m_DescriptionCData
         {
             get
             {
@@ -135,64 +192,20 @@ namespace RibbonXml
             set { Description = value?.Value; }
         }
 
-        [XmlOut]
-        [XmlAttribute("Tag")]
-        [DefaultValue(null)]
-        [Description("Gets or sets the custom data object in the panel source. " +
-            "This property can be used to store any object a as custom data object in a panel source. " +
-            "This data is not used by the framework. " +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_Tag
-        public string Tag { get; set; } = null;
-
-        #region CONTENT
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(null)]
-        [Description("Gets or sets the command item to be used as the panel's dialog launcher. " +
-            "The dialog launcher is displayed as a small button in the panel title bar. " +
-            "Clicking the button raises a command that follows the standard ribbon command routing. " +
-            "If this property is null the panel does not have a dialog launcher button. " +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_DialogLauncher
-        public RibbonCommandItem DialogLauncher
+        [XmlElement("Tag")]
+        internal XmlCDataSection m_TagCData
         {
             get
             {
-                // It must be RibbonButton if you want it to work
-                RibbonButton button = DialogLauncherDef?.Transform(new RibbonButton());
-                if (button != null)
-                {
-                    // DialogLauncher depends on this, thus must be changed
-                    button.MinWidth = 0;
-                    button.Width = double.NaN;
-                }
-                return button;
+                if (string.IsNullOrEmpty(Tag))
+                    return null;
+                return new XmlDocument().CreateCDataSection(Tag);
             }
+            set { Tag = value?.Value; }
         }
 
-        [XmlElement("DialogLauncher")]
-        public RibbonButtonDef DialogLauncherDef { get; set; } = null;
-        #endregion
-
-        [XmlOut]
-        [XmlAttribute("KeyTip")]
-        [DefaultValue(null)]
-        [Description("Gets or sets the name of the ribbon panel. " +
-            "The framework uses the Title property of the panel to display the panel title in the ribbon. " +
-            "The name property is not currently used by the framework. " +
-            "Applications can use this property to store a longer name for a panel if this is required in other UI customization dialogs. " +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource_KeyTip
-        public string KeyTip { get; set; } = null;
-
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(true)]
-        public bool IsSlideOutPanelVisible { get; set; } = true;
-
         [XmlAttribute("IsSlideOutPanelVisible")]
-        public string IsSlideOutPanelVisibleDef
+        internal string m_IsSlideOutPanelVisibleSerializable
         {
             get => IsSlideOutPanelVisible.ToString();
             set
@@ -207,13 +220,14 @@ namespace RibbonXml
                     = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
             }
         }
+        #endregion
 
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSpacer
         public class RibbonPanelSpacerDef : RibbonPanelSourceDef
         {
             /* 
              * Creation:
-                <RibbonPanelSpacerDef xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                <RibbonPanelSpacer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
                     <LeftBorderBrush>
                     &lt;SolidColorBrush xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Color="#FFFF0000" /&gt;
@@ -221,7 +235,7 @@ namespace RibbonXml
                     <RightBorderBrush>
                     &lt;SolidColorBrush xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Color="#FF0000FF" /&gt;
                     </RightBorderBrush>
-                </RibbonPanelSpacerDef>
+                </RibbonPanelSpacer>
             */
             [XmlOut]
             [XmlIgnore]
@@ -229,8 +243,15 @@ namespace RibbonXml
             // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSpacer_LeftBorderBrush
             public System.Windows.Media.Brush LeftBorderBrush { get; set; } = System.Windows.Media.Brushes.Transparent;
 
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue("Transparent")]
+            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSpacer_RightBorderBrush
+            public System.Windows.Media.Brush RightBorderBrush { get; set; } = System.Windows.Media.Brushes.Transparent;
+
+            #region INTERNALS
             [XmlElement("LeftBorderBrush")]
-            public XmlElement LeftBorderBrushDef
+            internal XmlElement m_LeftBorderBrushSerializable
             {
                 get
                 {
@@ -254,14 +275,8 @@ namespace RibbonXml
                 }
             }
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue("Transparent")]
-            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSpacer_RightBorderBrush
-            public System.Windows.Media.Brush RightBorderBrush { get; set; } = System.Windows.Media.Brushes.Transparent;
-
             [XmlElement("RightBorderBrush")]
-            public XmlElement RightBorderBrushDef
+            internal XmlElement m_RightBorderBrushSerializable
             {
                 get
                 {
@@ -284,10 +299,11 @@ namespace RibbonXml
                     }
                 }
             }
+            #endregion
         }
 
         [XmlIgnore]
-        public static readonly Dictionary<Type, Func<RibbonPanelSource>> SourceFactory = new Dictionary<Type, Func<RibbonPanelSource>>()
+        internal static readonly Dictionary<Type, Func<RibbonPanelSource>> SourceFactory = new Dictionary<Type, Func<RibbonPanelSource>>()
         {
             { typeof(RibbonPanelSourceDef), () => new RibbonPanelSource() },
             { typeof(RibbonPanelSpacerDef), () => new RibbonPanelSpacer() },

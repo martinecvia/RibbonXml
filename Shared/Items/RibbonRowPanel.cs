@@ -1,6 +1,7 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
@@ -13,6 +14,7 @@ using Autodesk.Windows;
 
 using RibbonXml.Items.CommandItems;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonRowPanel
@@ -27,7 +29,50 @@ namespace RibbonXml.Items
         "The items can be organized into multiple rows by adding a RibbonRowBreak item at the index where the new row is to start.")]
     public class RibbonRowPanelDef : RibbonItemDef
     {
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(100)]
+        public int ResizePriority { get; set; } = 100;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(RibbonRowPanelResizeStyle.None)]
+        public RibbonRowPanelResizeStyle SubPanelResizeStyle { get; set; } = RibbonRowPanelResizeStyle.None;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(false)]
+        public bool IsTopJustified { get; set; } = false;
+
+        #region INTERNALS
+#if !NET8_0_OR_GREATER // This was removed in AutoCAD 
+        // however keeping this does not affect usability, and its still used in .NET 4.6 and ZWCAD
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(false)]
+        public bool AreItemsArrangedFromRightToLeft { get; set; } = false;
+
+        [XmlAttribute("AreItemsArrangedFromRightToLeft")]
+        internal string m_AreItemsArrangedFromRightToLeftSerializable
+        {
+            get => AreItemsArrangedFromRightToLeft.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    AreItemsArrangedFromRightToLeft = false;
+                    return;
+                }
+                AreItemsArrangedFromRightToLeft = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+#endif
         #region CONTENT
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [XmlElement("RibbonSubPanelSource", typeof(RibbonSubPanelSourceDef))]
+        internal RibbonSubPanelSourceDef m_Source { get; set; } = null;
+
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonItem
         [XmlElement("RibbonCombo", typeof(RibbonListDef.RibbonComboDef))]
@@ -59,25 +104,11 @@ namespace RibbonXml.Items
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        public List<RibbonItemDef> ItemsDef { get; set; } = new List<RibbonItemDef>();
+        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
         #endregion
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(null)]
-        public RibbonSubPanelSource Source => SourceDef?.Transform(new RibbonSubPanelSource());
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        [XmlElement("RibbonSubPanelSource", typeof(RibbonSubPanelSourceDef))]
-        public RibbonSubPanelSourceDef SourceDef { get; set; } = null;
-
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(100)]
-        public int ResizePriority { get; set; } = 100;
-
         [XmlAttribute("ResizePriority")]
-        public string ResizePriorityDef
+        internal string m_ResizePrioritySerializable
         {
             get => ResizePriority.ToString();
             set
@@ -90,13 +121,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(RibbonRowPanelResizeStyle.None)]
-        public RibbonRowPanelResizeStyle SubPanelResizeStyle { get; set; } = RibbonRowPanelResizeStyle.None;
-
         [XmlAttribute("SubPanelResizeStyle")]
-        public string SubPanelResizeStyleDef
+        internal string m_SubPanelResizeStyleSerializable
         {
             get => SubPanelResizeStyle.ToString();
             set
@@ -107,13 +133,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(false)]
-        public bool IsTopJustified { get; set; } = false;
-
         [XmlAttribute("IsTopJustified")]
-        public string IsTopJustifiedDef
+        internal string m_IsTopJustifiedSerializable
         {
             get => IsTopJustified.ToString();
             set
@@ -127,33 +148,23 @@ namespace RibbonXml.Items
                 IsTopJustified = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
             }
         }
-#if !NET8_0_OR_GREATER // This was removed in AutoCAD 
-                       // however keeping this does not affect usability, and its still used in .NET 4.6 and ZWCAD
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(false)]
-        public bool AreItemsArrangedFromRightToLeft { get; set; } = false;
-
-        [XmlAttribute("AreItemsArrangedFromRightToLeft")]
-        public string AreItemsArrangedFromRightToLeftDef
-        {
-            get => AreItemsArrangedFromRightToLeft.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    // Passing the default value
-                    AreItemsArrangedFromRightToLeft = false;
-                    return;
-                }
-                AreItemsArrangedFromRightToLeft = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
-#endif
+        #endregion
 
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFlowPanel
         public class RibbonFlowPanelDef : RibbonRowPanelDef
         {
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(3)]
+            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFlowPanel_MaxRowNumber
+            public int MaxRowNumber { get; set; } = 3;
+
+            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFlowPanel_AreColumnsStatic
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(false)]
+            public bool AreColumnsStatic { get; set; } = false;
+
             /*
             [XmlOut]
             [XmlIgnore]
@@ -162,7 +173,7 @@ namespace RibbonXml.Items
             public RibbonSupportedSubPanelStyle SupportedSubPanel { get; set; } = RibbonSupportedSubPanelStyle.None;
 
             [XmlAttribute("SupportedSubPanel")]
-            public string SupportedSubPanelDef
+            internal string m_SupportedSubPanelSerializable
             {
                 get => SupportedSubPanel.ToString();
                 set
@@ -174,14 +185,9 @@ namespace RibbonXml.Items
             }
             */
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(3)]
-            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFlowPanel_MaxRowNumber
-            public int MaxRowNumber { get; set; } = 3;
-
+            #region INTERNALS
             [XmlAttribute("MaxRowNumber")]
-            public string MaxRowNumberDef
+            internal string m_MaxRowNumberSerializable
             {
                 get => MaxRowNumber.ToString();
                 set
@@ -194,14 +200,8 @@ namespace RibbonXml.Items
                 }
             }
 
-            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFlowPanel_AreColumnsStatic
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(false)]
-            public bool AreColumnsStatic { get; set; } = false;
-
             [XmlAttribute("AreColumnsStatic")]
-            public string AreColumnsStaticDef
+            internal string m_AreColumnsStaticSerializable
             {
                 get => AreColumnsStatic.ToString();
                 set
@@ -215,11 +215,35 @@ namespace RibbonXml.Items
                     AreColumnsStatic = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
                 }
             }
+            #endregion
         }
 
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFoldPanel
         public class RibbonFoldPanelDef : RibbonRowPanelDef
         {
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(RibbonFoldPanelResizeStyle.None)]
+            public new RibbonFoldPanelResizeStyle SubPanelResizeStyle { get; set; } = RibbonFoldPanelResizeStyle.None;
+
+            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFoldPanel_DefaultSize
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(RibbonFoldPanelSize.Medium)]
+            public RibbonFoldPanelSize DefaultSize { get; set; } = RibbonFoldPanelSize.Medium;
+
+            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFoldPanel_MaxSize
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(RibbonFoldPanelSize.Large)]
+            public RibbonFoldPanelSize MaxSize { get; set; } = RibbonFoldPanelSize.Large;
+
+            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFoldPanel_MinSize
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(RibbonFoldPanelSize.Small)]
+            public RibbonFoldPanelSize MinSize { get; set; } = RibbonFoldPanelSize.Small;
+
             /*
             [XmlOut]
             [XmlIgnore]
@@ -228,7 +252,7 @@ namespace RibbonXml.Items
             public RibbonSupportedSubPanelStyle SupportedSubPanel { get; set; } = RibbonSupportedSubPanelStyle.None;
 
             [XmlAttribute("SupportedSubPanel")]
-            public string SupportedSubPanelDef
+            internal string m_SupportedSubPanelSerializable
             {
                 get => SupportedSubPanel.ToString();
                 set
@@ -240,13 +264,9 @@ namespace RibbonXml.Items
             }
             */
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(RibbonFoldPanelResizeStyle.None)]
-            public new RibbonFoldPanelResizeStyle SubPanelResizeStyle { get; set; } = RibbonFoldPanelResizeStyle.None;
-
+            #region INTERNALS
             [XmlAttribute("SubPanelResizeStyle")]
-            public new string SubPanelResizeStyleDef
+            internal new string m_SubPanelResizeStyleSerializable
             {
                 get => SubPanelResizeStyle.ToString();
                 set
@@ -257,14 +277,8 @@ namespace RibbonXml.Items
                 }
             }
 
-            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFoldPanel_DefaultSize
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(RibbonFoldPanelSize.Medium)]
-            public RibbonFoldPanelSize DefaultSize { get; set; } = RibbonFoldPanelSize.Medium;
-
             [XmlAttribute("DefaultSize")]
-            public string DefaultSizeDef
+            internal string m_DefaultSizeSerializable
             {
                 get => DefaultSize.ToString();
                 set
@@ -275,14 +289,8 @@ namespace RibbonXml.Items
                 }
             }
 
-            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFoldPanel_MaxSize
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(RibbonFoldPanelSize.Large)]
-            public RibbonFoldPanelSize MaxSize { get; set; } = RibbonFoldPanelSize.Large;
-
             [XmlAttribute("MaxSize")]
-            public string MaxSizeDef
+            internal string m_MaxSizeSerializable
             {
                 get => MaxSize.ToString();
                 set
@@ -293,14 +301,8 @@ namespace RibbonXml.Items
                 }
             }
 
-            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonFoldPanel_MinSize
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(RibbonFoldPanelSize.Small)]
-            public RibbonFoldPanelSize MinSize { get; set; } = RibbonFoldPanelSize.Small;
-
             [XmlAttribute("MinSize")]
-            public string MinSizeDef
+            internal string m_MinSizeSerializable
             {
                 get => MinSize.ToString();
                 set
@@ -310,6 +312,7 @@ namespace RibbonXml.Items
                     MinSize = result;
                 }
             }
+            #endregion
         }
     }
 }

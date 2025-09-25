@@ -1,15 +1,18 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Xml;
 using System.Xml.Serialization;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab
     [XmlRoot("RibbonTab")]
     [Description("The class RibbonTab is used to store and manage the contents of a ribbon tab.")]
-    public class RibbonTabDef : BaseRibbonXml
+    public class RibbonTabDef
+        : BaseRibbonXml
     {
         private string _cookie;
         public override string Cookie
@@ -17,15 +20,6 @@ namespace RibbonXml
             get => _cookie ?? $"Tab={Id}_{Title}_{Name}";
             set => _cookie = value;
         }
-
-        #region CONTENT
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        [XmlElement("RibbonPanel")]
-        [Description("Gets the collection used to store the panels in the tab. " +
-            "The default is an empty collection.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_Panels
-        public List<RibbonPanelDef> PanelsDef { get; set; } = new List<RibbonPanelDef>();
-        #endregion
 
         [XmlOut]
         [XmlAttribute("Title")]
@@ -35,18 +29,6 @@ namespace RibbonXml
             "The default value is null.")]
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_Title
         public string Title { get; set; } = null;
-
-        [XmlElement("Title")]
-        public XmlCDataSection TitleCData
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(Title))
-                    return null;
-                return new XmlDocument().CreateCDataSection(Title);
-            }
-            set { Title = value?.Value ?? Name; }
-        }
 
         [XmlOut]
         [XmlAttribute("Name")]
@@ -59,19 +41,6 @@ namespace RibbonXml
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_Name
         public string Name { get; set; } = null;
 
-        [XmlElement("Name")]
-        public XmlCDataSection NameCData
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(Name))
-                    return null;
-                return new XmlDocument().CreateCDataSection(Name);
-            }
-            set { Name = value?.Value ?? Id; }
-        }
-
-
         [XmlOut]
         [XmlAttribute("Description")]
         [DefaultValue(null)]
@@ -81,18 +50,6 @@ namespace RibbonXml
             "The default value is null.")]
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_Description
         public string Description { get; set; } = null;
-
-        [XmlElement("Description")]
-        public XmlCDataSection DescriptionCData
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(Description))
-                    return null;
-                return new XmlDocument().CreateCDataSection(Description);
-            }
-            set { Description = value?.Value ?? string.Empty; }
-        }
 
         [XmlOut]
         [XmlIgnore]
@@ -108,42 +65,10 @@ namespace RibbonXml
         [DefaultValue(true)]
         public bool IsEnabled { get; set; } = true;
 
-        [XmlAttribute("IsEnabled")]
-        public string IsEnabledDef
-        {
-            get => IsEnabled.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    // Passing the default value
-                    IsEnabled = true;
-                    return;
-                }
-                IsEnabled = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
-
         [XmlOut]
         [XmlIgnore]
         [DefaultValue(true)]
         public bool IsPanelEnabled { get; set; } = true;
-
-        [XmlAttribute("IsPanelEnabled")]
-        public string IsPanelEnabledDef
-        {
-            get => IsPanelEnabled.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    // Passing the default value
-                    IsPanelEnabled = true;
-                    return;
-                }
-                IsPanelEnabled = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
 
         [XmlOut]
         [XmlIgnore]
@@ -156,63 +81,15 @@ namespace RibbonXml
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_IsContextualTab
         public bool IsContextualTab { get; set; } = false;
 
-        [XmlAttribute("IsContextualTab")]
-        public string IsContextualTabDef
-        {
-            get => IsContextualTab.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    // Passing the default value
-                    IsContextualTab = false;
-                    return;
-                }
-                IsContextualTab = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
-
         [XmlOut]
         [XmlIgnore]
         [DefaultValue(false)]
         public bool IsMergedContextualTab { get; set; } = false;
 
-        [XmlAttribute("IsMergedContextualTab")]
-        public string IsMergedContextualTabDef
-        {
-            get => IsMergedContextualTab.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    // Passing the default value
-                    IsMergedContextualTab = false;
-                    return;
-                }
-                IsMergedContextualTab = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
-
         [XmlOut]
         [XmlIgnore]
         [DefaultValue(false)]
         public bool AllowTearOffContextualPanels { get; set; } = false;
-
-        [XmlAttribute("AllowTearOffContextualPanels")]
-        public string AllowTearOffContextualPanelsDef
-        {
-            get => AllowTearOffContextualPanels.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                {
-                    // Passing the default value
-                    AllowTearOffContextualPanels = false;
-                    return;
-                }
-                AllowTearOffContextualPanels = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
 
         [XmlOut]
         [XmlAttribute("KeyTip")]
@@ -234,8 +111,150 @@ namespace RibbonXml
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_Tag
         public string Tag { get; set; } = null;
 
+        #region INTERNALS
+        #region CONTENT
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [XmlElement("RibbonPanel")]
+        [Description("Gets the collection used to store the panels in the tab. " +
+            "The default is an empty collection.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_Panels
+        internal List<RibbonPanelDef> m_Panels { get; set; } = new List<RibbonPanelDef>();
+        #endregion
+
+        [XmlElement("Title")]
+        internal XmlCDataSection m_TitleCData
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Title))
+                    return null;
+                return new XmlDocument().CreateCDataSection(Title);
+            }
+            set { Title = value?.Value ?? Name; }
+        }
+
+        [XmlElement("Name")]
+        internal XmlCDataSection m_NameCData
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Name))
+                    return null;
+                return new XmlDocument().CreateCDataSection(Name);
+            }
+            set { Name = value?.Value ?? Id; }
+        }
+
+        [XmlElement("Description")]
+        internal XmlCDataSection m_DescriptionCData
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Description))
+                    return null;
+                return new XmlDocument().CreateCDataSection(Description);
+            }
+            set { Description = value?.Value ?? string.Empty; }
+        }
+
+        [XmlAttribute("IsActive")]
+        internal string m_IsActiveSerializable
+        {
+            get => IsActive.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    IsActive = false;
+                    return;
+                }
+                IsActive = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [XmlAttribute("IsEnabled")]
+        internal string m_IsEnabledSerializable
+        {
+            get => IsEnabled.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    IsEnabled = true;
+                    return;
+                }
+                IsEnabled = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [XmlAttribute("IsPanelEnabled")]
+        internal string m_IsPanelEnabledSerializable
+        {
+            get => IsPanelEnabled.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    IsPanelEnabled = true;
+                    return;
+                }
+                IsPanelEnabled = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [XmlAttribute("IsContextualTab")]
+        internal string m_IsContextualTabSerializable
+        {
+            get => IsContextualTab.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    IsContextualTab = false;
+                    return;
+                }
+                IsContextualTab = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [XmlAttribute("IsMergedContextualTab")]
+        internal string m_IsMergedContextualTabSerializable
+        {
+            get => IsMergedContextualTab.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    IsMergedContextualTab = false;
+                    return;
+                }
+                IsMergedContextualTab = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [XmlAttribute("AllowTearOffContextualPanels")]
+        internal string m_AllowTearOffContextualPanelsSerializable
+        {
+            get => AllowTearOffContextualPanels.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    AllowTearOffContextualPanels = false;
+                    return;
+                }
+                AllowTearOffContextualPanels = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
         [XmlElement("Tag")]
-        public XmlCDataSection TagCData
+        internal XmlCDataSection m_TagCData
         {
             get
             {
@@ -245,5 +264,6 @@ namespace RibbonXml
             }
             set { Tag = value?.Value; }
         }
+        #endregion
     }
 }

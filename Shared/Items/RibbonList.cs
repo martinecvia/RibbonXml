@@ -1,6 +1,7 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
@@ -15,6 +16,7 @@ using Autodesk.Windows;
 
 using RibbonXml.Items.CommandItems;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonList
@@ -27,6 +29,41 @@ namespace RibbonXml.Items
             base.ShowImage = false;
         }
 
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(false)]
+        [Description("Gets or sets the value that indicates whether the drop-down list should support the grouping of items. " +
+            "Only RibbonCombo supports grouping. " +
+            "RibbonGallery does not support grouping. " +
+            "Grouping is done using the property RibbonItem.GroupName in the drop-down items. " +
+            "If this property is true, grouping is enabled in the drop-down list. " +
+            "If it is false, grouping is not enabled. " +
+            "The default value is false.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCombo_IsVirtualizing
+        public bool IsGrouping { get; set; } = false;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(double.NaN)]
+        [Description("Gets or sets the maximum height of the drop-down window that is displayed when a drop-down item is opened. " +
+            "The height must be in device independent units. " +
+            "The actual drop-down height depends on the number of items in the list and will not exceed the value set in this property. " +
+            "The default value is a calculated value that is based on system max screen height parameters.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonList_MaxDropDownHeight
+        public double MaxDropDownHeight { get; set; } = double.NaN;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(double.NaN)]
+        [Description("Gets or sets the width of the drop-down window that is displayed when a drop-down item is opened. " +
+            "The width must be in device independent units. " +
+            "The default value is NaN. " +
+            "The minimum drop-down width is equal to the control width. " +
+            "Thus, if the value set in this property is less than the control width, the value is ignored.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonList_DropDownWidth
+        public double DropDownWidth { get; set; } = double.NaN;
+
+        #region INTERNALS
         #region CONTENT
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonItem
@@ -42,7 +79,7 @@ namespace RibbonXml.Items
         [XmlElement("RibbonSlider", typeof(RibbonSliderDef))]
         [XmlElement("RibbonSpinner", typeof(RibbonSpinnerDef))]
         [XmlElement("RibbonTextBox", typeof(RibbonTextBoxDef))]
-        public List<RibbonItemDef> ItemsDef { get; set; } = new List<RibbonItemDef>();
+        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonCommandItem
@@ -62,24 +99,11 @@ namespace RibbonXml.Items
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        public List<RibbonCommandItemDef> MenuItemsDef { get; set; } = new List<RibbonCommandItemDef>();
+        internal List<RibbonCommandItemDef> m_MenuItems { get; set; } = new List<RibbonCommandItemDef>();
         #endregion
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(false)]
-        [Description("Gets or sets the value that indicates whether the drop-down list should support the grouping of items. " +
-            "Only RibbonCombo supports grouping. " +
-            "RibbonGallery does not support grouping. " +
-            "Grouping is done using the property RibbonItem.GroupName in the drop-down items. " +
-            "If this property is true, grouping is enabled in the drop-down list. " +
-            "If it is false, grouping is not enabled. " +
-            "The default value is false.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCombo_IsVirtualizing
-        public bool IsGrouping { get; set; } = false;
-
         [XmlAttribute("IsGrouping")]
-        public string IsGroupingDef
+        internal string m_IsGroupingSerializable
         {
             get => IsGrouping.ToString();
             set
@@ -95,19 +119,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(double.NaN)]
-        [Description("Gets or sets the width of the drop-down window that is displayed when a drop-down item is opened. " +
-            "The width must be in device independent units. " +
-            "The default value is NaN. " +
-            "The minimum drop-down width is equal to the control width. " +
-            "Thus, if the value set in this property is less than the control width, the value is ignored.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonList_DropDownWidth
-        public double DropDownWidth { get; set; } = double.NaN;
-
         [XmlAttribute("DropDownWidth")]
-        public string DropDownWidthDef
+        internal string m_DropDownWidthSerializable
         {
             get => DropDownWidth.ToString();
             set
@@ -122,18 +135,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(double.NaN)]
-        [Description("Gets or sets the maximum height of the drop-down window that is displayed when a drop-down item is opened. " +
-            "The height must be in device independent units. " +
-            "The actual drop-down height depends on the number of items in the list and will not exceed the value set in this property. " +
-            "The default value is a calculated value that is based on system max screen height parameters.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonList_MaxDropDownHeight
-        public double MaxDropDownHeight { get; set; } = double.NaN;
-
         [XmlAttribute("MaxDropDownHeight")]
-        public string MaxDropDownHeightDef
+        internal string m_MaxDropDownHeightSerializable
         {
             get => MaxDropDownHeight.ToString();
             set
@@ -147,6 +150,7 @@ namespace RibbonXml.Items
                 MaxDropDownHeight = double.NaN;
             }
         }
+        #endregion
 
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCombo
         public class RibbonComboDef : RibbonListDef
@@ -172,22 +176,6 @@ namespace RibbonXml.Items
             // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCombo_IsEditable
             public bool IsEditable { get; set; } = false;
 
-            [XmlAttribute("IsEditable")]
-            public string IsEditableDef
-            {
-                get => IsEditable.ToString();
-                set
-                {
-                    if (string.IsNullOrEmpty(value))
-                    {
-                        // Passing the default value
-                        IsEditable = false;
-                        return;
-                    }
-                    IsEditable = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-                }
-            }
-
             [XmlOut]
             [XmlAttribute("EditableText")]
             // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCombo_EditableText
@@ -195,38 +183,10 @@ namespace RibbonXml.Items
                 "The default value is null.")]
             public string EditableText { get; set; } = null;
 
-            [XmlElement("EditableText")]
-            public XmlCDataSection EditableTextCData
-            {
-                get
-                {
-                    if (string.IsNullOrEmpty(EditableText))
-                        return null;
-                    return new XmlDocument().CreateCDataSection(EditableText);
-                }
-                set { EditableText = value?.Value; }
-            }
-
             [XmlOut]
             [XmlIgnore]
             [DefaultValue(true)]
             public bool IsTextSearchEnabled { get; set; } = true;
-
-            [XmlAttribute("IsTextSearchEnabled")]
-            public string IsTextSearchEnabledDef
-            {
-                get => IsTextSearchEnabled.ToString();
-                set
-                {
-                    if (string.IsNullOrEmpty(value))
-                    {
-                        // Passing the default value
-                        IsTextSearchEnabled = true;
-                        return;
-                    }
-                    IsTextSearchEnabled = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-                }
-            }
 
             [XmlOut]
             [XmlIgnore]
@@ -239,19 +199,13 @@ namespace RibbonXml.Items
                 "4. the global command handler set in ComponentManager.CommandHandler. " +
                 "The default value is null.")]
             // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCombo_CommandHandler
-        public System.Windows.Input.ICommand CommandHandler { get; set; } = null;
+            public System.Windows.Input.ICommand CommandHandler { get; set; } = null;
 
-            [XmlAttribute("CommandHandler")]
-            public string CommandHandlerDef
-            {
-                get => CommandHandler != null && CommandHandler is CommandHandler handler
-                    ? handler.Command : string.Empty;
-                set
-                {
-                    if (!string.IsNullOrEmpty(value))
-                        CommandHandler = RibbonDef.GetHandler(value);
-                }
-            }
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(double.NaN)]
+            public double ResizableBoxWidth { get; set; } = double.NaN;
+
 #if NET8_0_OR_GREATER
             [XmlOut]
             [XmlIgnore]
@@ -267,8 +221,9 @@ namespace RibbonXml.Items
             // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCombo_IsVirtualizing
             public bool IsVirtualizing { get; set; } = true;
 
+            #region INTERNALS
             [XmlAttribute("IsVirtualizing")]
-            public string IsVirtualizingDef
+            public string m_IsVirtualizingSerializable
             {
                 get => IsVirtualizing.ToString();
                 set
@@ -282,14 +237,68 @@ namespace RibbonXml.Items
                     IsVirtualizing = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
                 }
             }
+            #endregion
 #endif
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(double.NaN)]
-            public double ResizableBoxWidth { get; set; } = double.NaN;
+
+            #region INTERNALS
+            [XmlAttribute("IsEditable")]
+            public string m_IsEditableSerializable
+            {
+                get => IsEditable.ToString();
+                set
+                {
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        // Passing the default value
+                        IsEditable = false;
+                        return;
+                    }
+                    IsEditable = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+                }
+            }
+
+            [XmlElement("EditableText")]
+            public XmlCDataSection m_EditableTextCData
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(EditableText))
+                        return null;
+                    return new XmlDocument().CreateCDataSection(EditableText);
+                }
+                set { EditableText = value?.Value; }
+            }
+
+            [XmlAttribute("IsTextSearchEnabled")]
+            public string m_IsTextSearchEnabledSerializable
+            {
+                get => IsTextSearchEnabled.ToString();
+                set
+                {
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        // Passing the default value
+                        IsTextSearchEnabled = true;
+                        return;
+                    }
+                    IsTextSearchEnabled = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+                }
+            }
+
+            [XmlAttribute("CommandHandler")]
+            public string m_CommandHandlerSerializable
+            {
+                get => CommandHandler != null && CommandHandler is CommandHandler handler
+                    ? handler.Command : string.Empty;
+                set
+                {
+                    if (!string.IsNullOrEmpty(value))
+                        CommandHandler = RibbonDef.GetHandler(value);
+                }
+            }
 
             [XmlAttribute("ResizableBoxWidth")]
-            public string ResizableBoxWidthDef
+            public string m_ResizableBoxWidthSerializable
             {
                 get => ResizableBoxWidth.ToString();
                 set
@@ -303,6 +312,7 @@ namespace RibbonXml.Items
                     ResizableBoxWidth = double.NaN;
                 }
             }
+            #endregion
 
             // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonGallery
             public class RibbonGalleryDef : RibbonComboDef
@@ -321,8 +331,21 @@ namespace RibbonXml.Items
                 // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonGallery_DisplayMode
                 public GalleryDisplayMode DisplayMode { get; set; } = GalleryDisplayMode.Window;
 
+                [XmlOut]
+                [XmlIgnore]
+                [DefaultValue(double.NaN)]
+                [TypeConverter(typeof(LengthConverter))]
+                public double ItemWidth { get; set; } = double.NaN;
+
+                [XmlOut]
+                [XmlIgnore]
+                [DefaultValue(double.NaN)]
+                [TypeConverter(typeof(LengthConverter))]
+                public double ItemHeight { get; set; } = double.NaN;
+
+                #region INTERNALS
                 [XmlAttribute("DisplayMode")]
-                public string DisplayModeDef
+                public string m_DisplayModeSerializable
                 {
                     get => DisplayMode.ToString();
                     set
@@ -333,14 +356,8 @@ namespace RibbonXml.Items
                     }
                 }
 
-                [XmlOut]
-                [XmlIgnore]
-                [DefaultValue(double.NaN)]
-                [TypeConverter(typeof(LengthConverter))]
-                public double ItemWidth { get; set; } = double.NaN;
-
                 [XmlAttribute("ItemWidth")]
-                public string ItemWidthDef
+                public string m_ItemWidthSerializable
                 {
                     get => ItemWidth.ToString();
                     set
@@ -355,14 +372,8 @@ namespace RibbonXml.Items
                     }
                 }
 
-                [XmlOut]
-                [XmlIgnore]
-                [DefaultValue(double.NaN)]
-                [TypeConverter(typeof(LengthConverter))]
-                public double ItemHeight { get; set; } = double.NaN;
-
                 [XmlAttribute("ItemHeight")]
-                public string ItemHeightDef
+                public string m_ItemHeightSerializable
                 {
                     get => ItemHeight.ToString();
                     set
@@ -376,11 +387,12 @@ namespace RibbonXml.Items
                         ItemHeight = double.NaN;
                     }
                 }
+                #endregion
             }
         }
 
         [XmlIgnore]
-        public static readonly Dictionary<Type, Func<RibbonCombo>> ListFactory = new Dictionary<Type, Func<RibbonCombo>>()
+        internal static readonly Dictionary<Type, Func<RibbonCombo>> ListFactory = new Dictionary<Type, Func<RibbonCombo>>()
         {
             { typeof(RibbonComboDef), () => new RibbonCombo() },
             { typeof(RibbonComboDef.RibbonGalleryDef), () => new RibbonGallery() },

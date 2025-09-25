@@ -1,7 +1,9 @@
 using System; // Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner
@@ -25,8 +27,58 @@ namespace RibbonXml.Items
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_Value
         public object Value { get; set; } = null;
 
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(null)]
+        [Description("Gets or sets the value specifying the amount of change that occurs when the up or down spin button is pressed. " +
+            "The data type of the value assigned to this property must be same as the data type of the Value property. " +
+            "The data types int and double are supported by default. " +
+            "To support other data types, derive from this class and override the virtual methods. " +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_Change
+        public object Change { get; set; } = null;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(null)]
+        [Description("Gets or sets the minimum value of the spin range. " +
+            "The data type of the value assigned to this property must be same as the data type of the Value property. " +
+            "The data types int and double are supported by default. " +
+            "To support other data types, derive from this class and override the virtual methods. " +
+            "The default value is null." +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_Minimum
+        public object Minimum { get; set; } = null;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(null)]
+        [Description("Gets or sets the maximum value of the spin range. " +
+            "The data type of the value assigned to this property must be same as the data type of the Value property. " +
+            "The data types int and double are supported by default. " +
+            "To support other data types, derive from this class and override the virtual methods. " +
+            "The default value is null.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_Maximum
+        public object Maximum { get; set; } = null;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(false)]
+        [Description("Gets or sets the value that indicates whether the value is directly editable. " +
+            "If the value is true, in addition to changing the value with spin buttons, the value can be entered directly in the edit control of the spinner. " +
+            "If it is false, the spinner value can only be changed using the spin buttons. " +
+            "The default value is false.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_IsEditable
+        public bool IsEditable { get; set; } = false;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(double.NaN)]
+        public double ResizableBoxWidth { get; set; } = double.NaN;
+
+        #region INTERNALS
         [XmlAttribute("Value")]
-        public string ValueDef
+        internal string m_ValueSerializable
         {
             get => Value?.ToString();
             set
@@ -42,19 +94,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(null)]
-        [Description("Gets or sets the value specifying the amount of change that occurs when the up or down spin button is pressed. " +
-            "The data type of the value assigned to this property must be same as the data type of the Value property. " +
-            "The data types int and double are supported by default. " +
-            "To support other data types, derive from this class and override the virtual methods. " +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_Change
-        public object Change { get; set; } = null;
-
         [XmlAttribute("Change")]
-        public string ChangeDef
+        internal string m_ChangeSerializable
         {
             get => Change?.ToString();
             set
@@ -81,19 +122,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(null)]
-        [Description("Gets or sets the maximum value of the spin range. " +
-            "The data type of the value assigned to this property must be same as the data type of the Value property. " +
-            "The data types int and double are supported by default. " +
-            "To support other data types, derive from this class and override the virtual methods. " +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_Maximum
-        public object Maximum { get; set; } = null;
-
         [XmlAttribute("Maximum")]
-        public string MaximumDef
+        internal string m_MaximumSerializable
         {
             get => Maximum?.ToString();
             set
@@ -120,20 +150,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(null)]
-        [Description("Gets or sets the minimum value of the spin range. " +
-            "The data type of the value assigned to this property must be same as the data type of the Value property. " +
-            "The data types int and double are supported by default. " +
-            "To support other data types, derive from this class and override the virtual methods. " +
-            "The default value is null." +
-            "The default value is null.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_Minimum
-        public object Minimum { get; set; } = null;
-
         [XmlAttribute("Minimum")]
-        public string MinimumDef
+        internal string m_MinimumSerializable
         {
             get => Minimum?.ToString();
             set
@@ -160,18 +178,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(false)]
-        [Description("Gets or sets the value that indicates whether the value is directly editable. " +
-            "If the value is true, in addition to changing the value with spin buttons, the value can be entered directly in the edit control of the spinner. " +
-            "If it is false, the spinner value can only be changed using the spin buttons. " +
-            "The default value is false.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner_IsEditable
-        public bool IsEditable { get; set; } = false;
-
         [XmlAttribute("IsEditable")]
-        public string IsEditableDef
+        internal string m_IsEditableSerializable
         {
             get => IsEditable.ToString();
             set
@@ -186,13 +194,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(double.NaN)]
-        public double ResizableBoxWidth { get; set; } = double.NaN;
-
         [XmlAttribute("ResizableBoxWidth")]
-        public string ResizableBoxWidthDef
+        internal string m_ResizableBoxWidthSerializable
         {
             get => ResizableBoxWidth.ToString();
             set
@@ -206,5 +209,6 @@ namespace RibbonXml.Items
                 ResizableBoxWidth = double.NaN;
             }
         }
+        #endregion
     }
 }

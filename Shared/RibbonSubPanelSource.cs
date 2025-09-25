@@ -1,11 +1,13 @@
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Xml;
 using System.Xml.Serialization;
 
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource
@@ -18,6 +20,25 @@ namespace RibbonXml
             set => _cookie = value;
         }
 
+        [XmlOut]
+        [XmlAttribute("Description")]
+        [DefaultValue(null)]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource_Description
+        public string Description { get; set; } = null;
+
+        [XmlOut]
+        [XmlAttribute("Name")]
+        [DefaultValue(null)]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource_Name
+        public string Name { get; set; } = null;
+
+        [XmlOut]
+        [XmlAttribute("Tag")]
+        [DefaultValue(null)]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource_Tag
+        public string Tag { get; set; } = null;
+
+        #region INTERNALS
         #region CONTENT
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonItem
@@ -50,17 +71,11 @@ namespace RibbonXml
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        public List<RibbonItemDef> ItemsDef { get; set; } = new List<RibbonItemDef>();
+        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
         #endregion
 
-        [XmlOut]
-        [XmlAttribute("Description")]
-        [DefaultValue(null)]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource_Description
-        public string Description { get; set; } = null;
-
         [XmlElement("Description")]
-        public XmlCDataSection DescriptionCData
+        internal XmlCDataSection m_DescriptionCData
         {
             get
             {
@@ -71,14 +86,8 @@ namespace RibbonXml
             set { Description = value?.Value ?? string.Empty; }
         }
 
-        [XmlOut]
-        [XmlAttribute("Name")]
-        [DefaultValue(null)]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource_Name
-        public string Name { get; set; } = null;
-
         [XmlElement("Name")]
-        public XmlCDataSection NameCData
+        internal XmlCDataSection m_NameCData
         {
             get
             {
@@ -89,10 +98,17 @@ namespace RibbonXml
             set { Name = value?.Value ?? Id; }
         }
 
-        [XmlOut]
-        [XmlAttribute("Tag")]
-        [DefaultValue(null)]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource_Tag
-        public string Tag { get; set; } = null;
+        [XmlElement("Tag")]
+        internal XmlCDataSection m_TagCData
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Tag))
+                    return null;
+                return new XmlDocument().CreateCDataSection(Tag);
+            }
+            set { Tag = value?.Value; }
+        }
+        #endregion
     }
 }

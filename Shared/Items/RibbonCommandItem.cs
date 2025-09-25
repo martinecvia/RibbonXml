@@ -1,9 +1,11 @@
 using System; // Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 using RibbonXml.Items.CommandItems;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCommandItem
@@ -30,18 +32,6 @@ namespace RibbonXml.Items
         [DefaultValue(null)]
         public System.Windows.Input.ICommand CommandHandler { get; set; } = null;
 
-        [XmlAttribute("CommandHandler")]
-        public string CommandHandlerDef
-        {
-            get => CommandHandler != null && CommandHandler is CommandHandler handler
-                ? handler.Command : string.Empty;
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                    CommandHandler = RibbonDef.GetHandler(value);
-            }
-        }
-
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCommandItem_IsCheckable
         [XmlOut]
         [XmlIgnore]
@@ -52,8 +42,26 @@ namespace RibbonXml.Items
             "The default value is false.")]
         public bool IsCheckable { get; set; } = false;
 
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(false)]
+        public bool IsActive { get; set; } = false;
+
+        #region INTERNALS
+        [XmlAttribute("CommandHandler")]
+        internal string m_CommandHandlerSerializable
+        {
+            get => CommandHandler != null && CommandHandler is CommandHandler handler
+                ? handler.Command : string.Empty;
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                    CommandHandler = RibbonDef.GetHandler(value);
+            }
+        }
+
         [XmlAttribute("IsCheckable")]
-        public string IsCheckableDef
+        public string m_IsCheckableSerializable
         {
             get => IsCheckable.ToString();
             set
@@ -68,13 +76,8 @@ namespace RibbonXml.Items
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(false)]
-        public bool IsActive { get; set; } = false;
-
         [XmlAttribute("IsActive")]
-        public string IsActiveDef
+        public string m_IsActiveSerializable
         {
             get => IsActive.ToString();
             set
@@ -88,5 +91,6 @@ namespace RibbonXml.Items
                 IsActive = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
             }
         }
+        #endregion
     }
 }

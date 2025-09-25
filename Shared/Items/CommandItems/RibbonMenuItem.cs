@@ -1,8 +1,10 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic;// Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items.CommandItems
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonMenuItem
@@ -13,7 +15,7 @@ namespace RibbonXml.Items.CommandItems
     [XmlInclude(typeof(ApplicationMenuItemDef))]
     public class RibbonMenuItemDef : RibbonCommandItemDef
     {
-        #region CONTENT
+        #region CONTENT, INTERNALS
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonItem
         [XmlElement("RibbonCombo", typeof(RibbonListDef.RibbonComboDef))]
@@ -45,7 +47,7 @@ namespace RibbonXml.Items.CommandItems
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        public List<RibbonItemDef> ItemsDef { get; set; } = new List<RibbonItemDef>();
+        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
         #endregion
 
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_ApplicationMenuItem
@@ -69,22 +71,6 @@ namespace RibbonXml.Items.CommandItems
             // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_ApplicationMenuItem_IsSplit
             public bool IsSplit { get; set; } = false;
 
-            [XmlAttribute("IsSplit")]
-            public string IsSplitDef
-            {
-                get => IsSplit.ToString();
-                set
-                {
-                    if (string.IsNullOrEmpty(value))
-                    {
-                        // Passing the default value
-                        IsSplit = false;
-                        return;
-                    }
-                    IsSplit = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
-                }
-            }
-
             [XmlOut]
             [XmlAttribute("SplitKeyTip")]
             [DefaultValue(null)]
@@ -100,8 +86,31 @@ namespace RibbonXml.Items.CommandItems
             // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_ApplicationMenuItem_IsPinable
             public bool IsPinable { get; set; } = false;
 
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(0)]
+            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_ApplicationMenuItem_MaxDescriptionLines
+            public int MaxDescriptionLines { get; set; } = 0;
+
+            #region INTERNALS
+            [XmlAttribute("IsSplit")]
+            internal string m_IsSplitSerializable
+            {
+                get => IsSplit.ToString();
+                set
+                {
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        // Passing the default value
+                        IsSplit = false;
+                        return;
+                    }
+                    IsSplit = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+                }
+            }
+
             [XmlAttribute("IsPinable")]
-            public string IsPinableDef
+            public string m_IsPinableSerializable
             {
                 get => IsPinable.ToString();
                 set
@@ -116,14 +125,8 @@ namespace RibbonXml.Items.CommandItems
                 }
             }
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(0)]
-            // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_ApplicationMenuItem_MaxDescriptionLines
-            public int MaxDescriptionLines { get; set; } = 0;
-
             [XmlAttribute("MaxDescriptionLines")]
-            public string MaxDescriptionLinesDef
+            public string m_MaxDescriptionLinesSerializable
             {
                 get => MaxDescriptionLines.ToString();
                 set
@@ -135,6 +138,7 @@ namespace RibbonXml.Items.CommandItems
                     }
                 }
             }
+            #endregion
         }
     }
 }

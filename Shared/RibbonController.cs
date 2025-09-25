@@ -1,5 +1,6 @@
 ﻿using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
+using System.Linq; // Keep for .NET 4.6
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
 #if ZWCAD
@@ -12,17 +13,12 @@ using Autodesk.Windows;
 #endif
 #endregion
 
-
 namespace RibbonXml
 {
     public class RibbonDef
     {
         private readonly Dictionary<string, CommandHandler> _handlers;
-        private RibbonDef(Dictionary<string, CommandHandler> handlers,
-            CommandHandler defaultHandler)
-        {
-            _handlers = handlers;
-        }
+        private readonly Type _hWCommandHandler;
 
         private RibbonControl Ribbon => ComponentManager.Ribbon;
 
@@ -30,29 +26,47 @@ namespace RibbonXml
         private volatile bool _hasTab = false;
         private volatile bool _hasContextual = false;
 
+        private RibbonDef(Dictionary<string, CommandHandler> handlers,
+            Type defaultHandler)
+        {
+            _handlers = handlers;
+            _hWCommandHandler = defaultHandler;
+        }
+
+        public void SetCommandHandler(string command, CommandHandler handler) =>
+            _handlers[command] = handler;
+        
+        [XmlOut]
+        internal System.Reflection.Assembly ExecutingAssembly { get; private set; }
+        #region INTERNALS
         [XmlOut]
         internal static System.Windows.Media.ImageSource GetImageSource(string resourceName)
         {
-            if (def == null)
+            if (Def == null)
                 throw new InvalidOperationException("RibbonDef instance is not built yet.");
             throw new NotImplementedException();
         }
 
         /// <summary>
         /// Gets a handler for the given command string.
-        /// Returns a default CommandHandlerDef if the command is not registered.
+        /// Returns a default <see cref="CommandHandler.CommandHandlerDef"/> if the command is not registered.
         /// </summary>
-        public static CommandHandler GetHandler(string command)
+        internal static CommandHandler GetHandler(string command)
         {
-            if (string.IsNullOrEmpty(command))
-                return null;
-            if (def == null)
-                throw new InvalidOperationException("RibbonDef instance is not built yet.");
-            if (def._handlers.TryGetValue(command, out CommandHandler handler))
-                return handler;
+                if (string.IsNullOrEmpty(command))
+                    return null;
+                if (Def == null)
+                    throw new InvalidOperationException("RibbonDef instance is not built yet.");
+                if (Def._handlers.TryGetValue(command, out CommandHandler handler))
+                    return handler;
+            try
+            {
+                if (Def._hWCommandHandler != null)
+                    return (CommandHandler)Activator.CreateInstance(Def._hWCommandHandler, command);
+            } catch (Exception) { }
             return new CommandHandler.CommandHandlerDef(command); // default fallback
         }
-
+        #endregion 
         #region PRIVATE
         private void ApplyOlderTheme(ContextualRibbonTab tab)
         {
@@ -100,50 +114,84 @@ namespace RibbonXml
 
         [XmlOut]
         public class ContextualRibbonTab : RibbonTab
-        {
-
-        }
+        { }
 
         #region BUILDER
-        public class RibbonDefBuilder
+        /// <summary>
+        /// Provides a registry for managing ribbon command handlers and building
+        /// a <see cref="RibbonDef"/> definition that can be used in ribbon UI initialization.
+        /// </summary>
+        public sealed class RibbonRegistry
         {
-            private readonly Dictionary<string, CommandHandler> _handlers 
+            private readonly Dictionary<string, CommandHandler> _handlers
                 = new Dictionary<string, CommandHandler>();
-            private CommandHandler _defaultHandler;
 
-            public RibbonDefBuilder SetDefaultHandler(CommandHandler handler)
+            private Type _defaultHandler;
+
+            /// <summary>
+            /// Sets the default command handler type.
+            /// </summary>
+            /// <param name="handler">
+            /// The type of the handler to use as default for commands
+            /// that do not have an explicit handler assigned.
+            /// </param>
+            /// <returns>
+            /// The current <see cref="RibbonRegistry"/> instance (for fluent API).
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown if <paramref name="handler"/> is <c>null</c>.
+            /// </exception>
+            public RibbonRegistry SetDefaultHandler(Type handler)
             {
-                if(handler == null)
-                    throw new ArgumentNullException(nameof(handler));
-                _defaultHandler = handler;
+                _defaultHandler = handler ?? throw new ArgumentNullException(nameof(handler));
                 return this;
             }
 
-            public RibbonDefBuilder AddCommandHandler(string command, CommandHandler handler)
+            /// <summary>
+            /// Registers a command handler for a ribbon command.
+            /// </summary>
+            /// <param name="handler">The handler delegate associated with the command.</param>
+            /// <returns>
+            /// The current <see cref="RibbonRegistry"/> instance (for fluent API).
+            /// </returns>
+            /// <exception cref="ArgumentNullException">
+            /// Thrown if <paramref name="handler"/> is <c>null</c>.
+            /// </exception>
+            public RibbonRegistry AddCommandHandler(CommandHandler handler)
             {
-                if (string.IsNullOrEmpty(command) || handler == null)
-                    throw new ArgumentNullException(string.IsNullOrEmpty(command) ? nameof(command) : nameof(handler));
-                _handlers[command] = handler;
+                _handlers[handler.Command] = handler ?? throw new ArgumentNullException(nameof(handler));
                 return this;
             }
 
-            public RibbonDef Build()
+            /// <summary>
+            /// Builds a <see cref="RibbonDef"/> instance with the registered command handlers.
+            /// </summary>
+            /// <param name="executingAssembly">
+            /// The assembly to associate with the <see cref="RibbonDef"/>.
+            /// If <c>null</c>, the calling assembly is used instead.
+            /// </param>
+            /// <returns>
+            /// A fully constructed <see cref="RibbonDef"/> object containing the registered
+            /// handlers and default handler type.
+            /// </returns>
+            public RibbonDef Build(System.Reflection.Assembly executingAssembly)
             {
-                RibbonDef def = new RibbonDef(
-                    new Dictionary<string, CommandHandler>(_handlers), 
-                    _defaultHandler);
+                RibbonDef def = new RibbonDef(new Dictionary<string, CommandHandler>(_handlers), _defaultHandler)
+                {
+                    ExecutingAssembly = executingAssembly ?? System.Reflection.Assembly.GetCallingAssembly()
+                };
                 return DefPtr(def);
             }
         }
         #endregion
-        private static RibbonDef def { get; set; }
-        private static RibbonDef DefPtr(RibbonDef instance)
+        private static RibbonDef Def { get; set; }
+        private static RibbonDef DefPtr(RibbonDef m_Instance)
         {
-            if (instance == null)
+            if (m_Instance == null)
                 throw new InvalidOperationException("RibbonDef instance is not allowed to be built reflectively.");
-            if (def == null)
-                def = instance;
-            return def;
+            if (Def == null)
+                Def = m_Instance;
+            return Def;
         }
     }
 }

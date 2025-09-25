@@ -1,6 +1,7 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
@@ -11,6 +12,7 @@ using Autodesk.Windows;
 #endif
 #endregion
 
+[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items.CommandItems
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonListButton
@@ -23,6 +25,38 @@ namespace RibbonXml.Items.CommandItems
     [XmlInclude(typeof(RibbonSplitButtonDef))]
     public abstract class RibbonListButtonDef : RibbonButtonDef
     {
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(true)]
+        [Description("Gets or sets the value that indicates whether the list button is to behave like a split button. " +
+            "If this property is true, the list button supports executing the button without opening the drop-down list, and the drop-down list is opened by clicking the arrow. " +
+            "If it is false, the list button always opens the drop-down list when clicked, and items need to be executed from the drop-down list. " +
+            "The default value is true.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonListButton_IsSplit
+        public bool IsSplit { get; set; } = true;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(false)]
+        [Description("Gets or sets the value that indicates whether the drop-down list supports the grouping of items. " +
+            "Grouping is accomplished by setting the property RibbonItem.GroupName for the drop-down items, so the items in the drop-down list should set the group name with that property. " +
+            "If this property is true, grouping is enabled in the drop-down list. " +
+            "If it is false, grouping is not enabled. " +
+            "The default value is false.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonListButton_IsGrouping
+        public bool IsGrouping { get; set; } = false;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(RibbonListButton.RibbonListButtonSynchronizeOption.All)]
+        public RibbonListButton.RibbonListButtonSynchronizeOption SynchronizeOption { get; set; } = RibbonListButton.RibbonListButtonSynchronizeOption.All;
+
+        [XmlOut]
+        [XmlIgnore]
+        [DefaultValue(false)]
+        public bool AllowOrientation { get; set; } = false;
+
+        #region INERNALS
         #region CONTENT
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonItem
@@ -55,21 +89,11 @@ namespace RibbonXml.Items.CommandItems
         [XmlElement("RibbonMenuButton", typeof(RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonSplitButtonDef))]
-        public List<RibbonItemDef> ItemsDef { get; set; } = new List<RibbonItemDef>();
+        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
         #endregion
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(true)]
-        [Description("Gets or sets the value that indicates whether the list button is to behave like a split button. " +
-            "If this property is true, the list button supports executing the button without opening the drop-down list, and the drop-down list is opened by clicking the arrow. " +
-            "If it is false, the list button always opens the drop-down list when clicked, and items need to be executed from the drop-down list. " +
-            "The default value is true.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonListButton_IsSplit
-        public bool IsSplit { get; set; } = true;
-
         [XmlAttribute("IsSplit")]
-        public string IsSplitDef
+        internal string m_IsSplitSerializable
         {
             get => IsSplit.ToString();
             set
@@ -84,19 +108,8 @@ namespace RibbonXml.Items.CommandItems
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(false)]
-        [Description("Gets or sets the value that indicates whether the drop-down list supports the grouping of items. " +
-            "Grouping is accomplished by setting the property RibbonItem.GroupName for the drop-down items, so the items in the drop-down list should set the group name with that property. " +
-            "If this property is true, grouping is enabled in the drop-down list. " +
-            "If it is false, grouping is not enabled. " +
-            "The default value is false.")]
-        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonListButton_IsGrouping
-        public bool IsGrouping { get; set; } = false;
-
         [XmlAttribute("IsGrouping")]
-        public string IsGroupingDef
+        internal string m_IsGroupingSerializable
         {
             get => IsGrouping.ToString();
             set
@@ -110,13 +123,8 @@ namespace RibbonXml.Items.CommandItems
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(RibbonListButton.RibbonListButtonSynchronizeOption.All)]
-        public RibbonListButton.RibbonListButtonSynchronizeOption SynchronizeOption { get; set; } = RibbonListButton.RibbonListButtonSynchronizeOption.All;
-
         [XmlAttribute("SynchronizeOption")]
-        public string SynchronizeOptionDef
+        internal string m_SynchronizeOptionSerializable
         {
             get => SynchronizeOption.ToString();
             set
@@ -127,13 +135,8 @@ namespace RibbonXml.Items.CommandItems
             }
         }
 
-        [XmlOut]
-        [XmlIgnore]
-        [DefaultValue(false)]
-        public bool AllowOrientation { get; set; } = false;
-
         [XmlAttribute("AllowOrientation")]
-        public string AllowOrientationDef
+        internal string m_AllowOrientationSerializable
         {
             get => AllowOrientation.ToString();
             set
@@ -147,6 +150,7 @@ namespace RibbonXml.Items.CommandItems
                 AllowOrientation = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
             }
         }
+        #endregion
 
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonChecklistButton
         [Description("This class is used to support the Checklist button in a ribbon. " +
@@ -184,8 +188,29 @@ namespace RibbonXml.Items.CommandItems
             [DefaultValue(3)]
             public int MaxRow { get; set; } = 3;
 
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(10_000)]
+            public int MaxColumn { get; set; } = 10_000;
+
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(RibbonItemSize.Standard)]
+            public RibbonItemSize CollapsedSize { get; set; } = RibbonItemSize.Standard;
+
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(System.Windows.Controls.Orientation.Horizontal)]
+            public System.Windows.Controls.Orientation ExpandOrientation { get; set; } = System.Windows.Controls.Orientation.Horizontal;
+
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(true)]
+            public bool CanCollapse { get; set; } = true;
+
+            #region INTERNALS
             [XmlAttribute("MaxRow")]
-            public string MaxRowDef
+            internal string m_MaxRowSerializable
             {
                 get => MaxRow.ToString();
                 set
@@ -198,13 +223,8 @@ namespace RibbonXml.Items.CommandItems
                 }
             }
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(10_000)]
-            public int MaxColumn { get; set; } = 10_000;
-
             [XmlAttribute("MaxColumn")]
-            public string MaxColumnDef
+            internal string m_MaxColumnSerializable
             {
                 get => MaxColumn.ToString();
                 set
@@ -217,13 +237,8 @@ namespace RibbonXml.Items.CommandItems
                 }
             }
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(System.Windows.Controls.Orientation.Horizontal)]
-            public System.Windows.Controls.Orientation ExpandOrientation { get; set; } = System.Windows.Controls.Orientation.Horizontal;
-
             [XmlAttribute("ExpandOrientation")]
-            public string ExpandOrientationDef
+            internal string m_ExpandOrientationSerializable
             {
                 get => ExpandOrientation.ToString();
                 set
@@ -234,13 +249,8 @@ namespace RibbonXml.Items.CommandItems
                 }
             }
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(RibbonItemSize.Standard)]
-            public RibbonItemSize CollapsedSize { get; set; } = RibbonItemSize.Standard;
-
             [XmlAttribute("CollapsedSize")]
-            public string CollapsedSizeDef
+            internal string m_CollapsedSizeSerializable
             {
                 get => CollapsedSize.ToString();
                 set
@@ -251,13 +261,8 @@ namespace RibbonXml.Items.CommandItems
                 }
             }
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(true)]
-            public bool CanCollapse { get; set; } = true;
-
             [XmlAttribute("CanCollapse")]
-            public string CanCollapseDef
+            internal string m_CanCollapseSerializable
             {
                 get => CanCollapse.ToString();
                 set
@@ -271,6 +276,7 @@ namespace RibbonXml.Items.CommandItems
                     CanCollapse = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
                 }
             }
+            #endregion
         }
 
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSplitButton
@@ -291,8 +297,14 @@ namespace RibbonXml.Items.CommandItems
             [DefaultValue(RibbonSplitButtonListStyle.List)]
             public RibbonSplitButtonListStyle ListStyle { get; set; } = RibbonSplitButtonListStyle.List;
 
+            [XmlOut]
+            [XmlIgnore]
+            [DefaultValue(RibbonImageSize.Large)]
+            public RibbonImageSize ListImageSize { get; set; } = RibbonImageSize.Large;
+
+            #region INTERNALS
             [XmlAttribute("ListStyle")]
-            public string ListStyleDef
+            internal string m_ListStyleSerializable
             {
                 get => ListStyle.ToString();
                 set
@@ -303,13 +315,8 @@ namespace RibbonXml.Items.CommandItems
                 }
             }
 
-            [XmlOut]
-            [XmlIgnore]
-            [DefaultValue(RibbonImageSize.Large)]
-            public RibbonImageSize ListImageSize { get; set; } = RibbonImageSize.Large;
-
             [XmlAttribute("ListImageSize")]
-            public string ListImageSizeDef
+            internal string m_ListImageSizeSerializable
             {
                 get => ListImageSize.ToString();
                 set
@@ -319,6 +326,7 @@ namespace RibbonXml.Items.CommandItems
                     ListImageSize = result;
                 }
             }
+            #endregion
         }
     }
 }
