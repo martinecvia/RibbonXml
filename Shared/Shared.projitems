@@ -27,6 +27,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonSlider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonSpinner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonTextBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)resourcelib\Accelerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceLib\Windows\Gdi32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceLib\Windows\Kernel32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceLib\Windows\User32.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceLib\Windows\Winver.h.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RibbonController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RibbonItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RibbonPanel.cs" />
@@ -37,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Items\CommandItems\" />
+    <Folder Include="$(MSBuildThisFileDirectory)ResourceLib\Windows\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\{0c615a0b-631a-45ac-9e41-d37ec56c5f8c}" />
