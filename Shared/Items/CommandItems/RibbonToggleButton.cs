@@ -1,7 +1,5 @@
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items.CommandItems
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-__MEMBERTYPE_Properties_Autodesk_Windows_RibbonToggleButton

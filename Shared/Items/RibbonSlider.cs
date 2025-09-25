@@ -1,14 +1,12 @@
 using System; // Keep for .NET 4.6
 using System.ComponentModel;
 using System.Linq; // Keep for .NET 4.6
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Xml;
 using System.Xml.Serialization;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSlider
@@ -78,7 +76,7 @@ namespace RibbonXml.Items
 
         #region INTERNALS
         [XmlAttribute("Minimum")]
-        internal string m_MinimumSerializable
+        public string m_MinimumSerializable
         {
             get => Minimum.ToString();
             set
@@ -94,7 +92,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("Maximum")]
-        internal string m_MaximumSerializable
+        public string m_MaximumSerializable
         {
             get => Maximum.ToString();
             set
@@ -110,7 +108,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("TextBox1Visibility")]
-        internal string m_TextBox1VisibilitySerializable
+        public string m_TextBox1VisibilitySerializable
         {
             get => TextBox1Visibility.ToString();
             set
@@ -122,7 +120,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("TextBox1Editable")]
-        internal string m_TextBox1EditableSerializable
+        public string m_TextBox1EditableSerializable
         {
             get => TextBox1Editable.ToString();
             set
@@ -138,7 +136,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("IsSnapToTickEnabled")]
-        internal string m_IsSnapToTickEnabledSerializable
+        public string m_IsSnapToTickEnabledSerializable
         {
             get => IsSnapToTickEnabled.ToString();
             set
@@ -154,7 +152,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("TextBox1Width")]
-        internal string m_TextBox1WidthSerializable
+        public string m_TextBox1WidthSerializable
         {
             get => TextBox1Width.ToString();
             set
@@ -170,7 +168,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("TickPlacement")]
-        internal string m_TickPlacementSerializable
+        public string m_TickPlacementSerializable
         {
             get => TickPlacement.ToString();
             set
@@ -182,7 +180,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("Value")]
-        internal string m_ValueSerializable
+        public string m_ValueSerializable
         {
             get => Value.ToString();
             set
@@ -198,7 +196,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("Ticks")]
-        internal string m_TicksSerializable
+        public string m_TicksSerializable
         {
             get => string.Join(" ", Ticks?.Select(val => val.ToString(System.Globalization.CultureInfo.InvariantCulture)));
             set
@@ -219,7 +217,7 @@ namespace RibbonXml.Items
         }
 
         [XmlElement("TextBox1Text")]
-        internal XmlCDataSection m_TextBox1TextCData
+        public XmlCDataSection m_TextBox1TextCData
         {
             get
             {

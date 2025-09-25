@@ -11,7 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)BaseRibbonXml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CommandHandler.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Component.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\ProgressBarSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\RibbonButton.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\RibbonCheckBox.cs" />

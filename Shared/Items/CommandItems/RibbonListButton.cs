@@ -1,7 +1,6 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
@@ -12,7 +11,6 @@ using Autodesk.Windows;
 #endif
 #endregion
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items.CommandItems
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonListButton
@@ -89,11 +87,11 @@ namespace RibbonXml.Items.CommandItems
         [XmlElement("RibbonMenuButton", typeof(RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonSplitButtonDef))]
-        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
+        public List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
         #endregion
 
         [XmlAttribute("IsSplit")]
-        internal string m_IsSplitSerializable
+        public string m_IsSplitSerializable
         {
             get => IsSplit.ToString();
             set
@@ -109,7 +107,7 @@ namespace RibbonXml.Items.CommandItems
         }
 
         [XmlAttribute("IsGrouping")]
-        internal string m_IsGroupingSerializable
+        public string m_IsGroupingSerializable
         {
             get => IsGrouping.ToString();
             set
@@ -124,7 +122,7 @@ namespace RibbonXml.Items.CommandItems
         }
 
         [XmlAttribute("SynchronizeOption")]
-        internal string m_SynchronizeOptionSerializable
+        public string m_SynchronizeOptionSerializable
         {
             get => SynchronizeOption.ToString();
             set
@@ -136,7 +134,7 @@ namespace RibbonXml.Items.CommandItems
         }
 
         [XmlAttribute("AllowOrientation")]
-        internal string m_AllowOrientationSerializable
+        public string m_AllowOrientationSerializable
         {
             get => AllowOrientation.ToString();
             set
@@ -210,7 +208,7 @@ namespace RibbonXml.Items.CommandItems
 
             #region INTERNALS
             [XmlAttribute("MaxRow")]
-            internal string m_MaxRowSerializable
+            public string m_MaxRowSerializable
             {
                 get => MaxRow.ToString();
                 set
@@ -224,7 +222,7 @@ namespace RibbonXml.Items.CommandItems
             }
 
             [XmlAttribute("MaxColumn")]
-            internal string m_MaxColumnSerializable
+            public string m_MaxColumnSerializable
             {
                 get => MaxColumn.ToString();
                 set
@@ -238,7 +236,7 @@ namespace RibbonXml.Items.CommandItems
             }
 
             [XmlAttribute("ExpandOrientation")]
-            internal string m_ExpandOrientationSerializable
+            public string m_ExpandOrientationSerializable
             {
                 get => ExpandOrientation.ToString();
                 set
@@ -250,7 +248,7 @@ namespace RibbonXml.Items.CommandItems
             }
 
             [XmlAttribute("CollapsedSize")]
-            internal string m_CollapsedSizeSerializable
+            public string m_CollapsedSizeSerializable
             {
                 get => CollapsedSize.ToString();
                 set
@@ -262,7 +260,7 @@ namespace RibbonXml.Items.CommandItems
             }
 
             [XmlAttribute("CanCollapse")]
-            internal string m_CanCollapseSerializable
+            public string m_CanCollapseSerializable
             {
                 get => CanCollapse.ToString();
                 set
@@ -304,7 +302,7 @@ namespace RibbonXml.Items.CommandItems
 
             #region INTERNALS
             [XmlAttribute("ListStyle")]
-            internal string m_ListStyleSerializable
+            public string m_ListStyleSerializable
             {
                 get => ListStyle.ToString();
                 set
@@ -316,7 +314,7 @@ namespace RibbonXml.Items.CommandItems
             }
 
             [XmlAttribute("ListImageSize")]
-            internal string m_ListImageSizeSerializable
+            public string m_ListImageSizeSerializable
             {
                 get => ListImageSize.ToString();
                 set

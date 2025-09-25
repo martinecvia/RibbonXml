@@ -1,7 +1,6 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
@@ -16,7 +15,6 @@ using Autodesk.Windows;
 
 using RibbonXml.Items.CommandItems;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonList
@@ -79,7 +77,7 @@ namespace RibbonXml.Items
         [XmlElement("RibbonSlider", typeof(RibbonSliderDef))]
         [XmlElement("RibbonSpinner", typeof(RibbonSpinnerDef))]
         [XmlElement("RibbonTextBox", typeof(RibbonTextBoxDef))]
-        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
+        public List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonCommandItem
@@ -99,11 +97,11 @@ namespace RibbonXml.Items
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        internal List<RibbonCommandItemDef> m_MenuItems { get; set; } = new List<RibbonCommandItemDef>();
+        public List<RibbonCommandItemDef> m_MenuItems { get; set; } = new List<RibbonCommandItemDef>();
         #endregion
 
         [XmlAttribute("IsGrouping")]
-        internal string m_IsGroupingSerializable
+        public string m_IsGroupingSerializable
         {
             get => IsGrouping.ToString();
             set
@@ -120,7 +118,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("DropDownWidth")]
-        internal string m_DropDownWidthSerializable
+        public string m_DropDownWidthSerializable
         {
             get => DropDownWidth.ToString();
             set
@@ -136,7 +134,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("MaxDropDownHeight")]
-        internal string m_MaxDropDownHeightSerializable
+        public string m_MaxDropDownHeightSerializable
         {
             get => MaxDropDownHeight.ToString();
             set

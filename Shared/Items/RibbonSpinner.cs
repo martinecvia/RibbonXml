@@ -1,9 +1,7 @@
 using System; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSpinner
@@ -78,7 +76,7 @@ namespace RibbonXml.Items
 
         #region INTERNALS
         [XmlAttribute("Value")]
-        internal string m_ValueSerializable
+        public string m_ValueSerializable
         {
             get => Value?.ToString();
             set
@@ -95,7 +93,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("Change")]
-        internal string m_ChangeSerializable
+        public string m_ChangeSerializable
         {
             get => Change?.ToString();
             set
@@ -123,7 +121,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("Maximum")]
-        internal string m_MaximumSerializable
+        public string m_MaximumSerializable
         {
             get => Maximum?.ToString();
             set
@@ -151,7 +149,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("Minimum")]
-        internal string m_MinimumSerializable
+        public string m_MinimumSerializable
         {
             get => Minimum?.ToString();
             set
@@ -179,7 +177,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("IsEditable")]
-        internal string m_IsEditableSerializable
+        public string m_IsEditableSerializable
         {
             get => IsEditable.ToString();
             set
@@ -195,7 +193,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("ResizableBoxWidth")]
-        internal string m_ResizableBoxWidthSerializable
+        public string m_ResizableBoxWidthSerializable
         {
             get => ResizableBoxWidth.ToString();
             set

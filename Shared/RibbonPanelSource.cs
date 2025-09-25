@@ -3,7 +3,6 @@ using System.Xml;
 using System.ComponentModel;
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.Windows.Markup;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
@@ -17,7 +16,6 @@ using Autodesk.Windows;
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanelSource
@@ -150,14 +148,14 @@ namespace RibbonXml
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
+        public List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
 
         [XmlElement("DialogLauncher")]
-        internal RibbonButtonDef m_DialogLauncher { get; set; } = null;
+        public RibbonButtonDef m_DialogLauncher { get; set; } = null;
         #endregion
 
         [XmlElement("Title")]
-        internal XmlCDataSection m_TitleCData
+        public XmlCDataSection m_TitleCData
         {
             get
             {
@@ -169,7 +167,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Name")]
-        internal XmlCDataSection m_NameCData
+        public XmlCDataSection m_NameCData
         {
             get
             {
@@ -181,7 +179,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Description")]
-        internal XmlCDataSection m_DescriptionCData
+        public XmlCDataSection m_DescriptionCData
         {
             get
             {
@@ -193,7 +191,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Tag")]
-        internal XmlCDataSection m_TagCData
+        public XmlCDataSection m_TagCData
         {
             get
             {
@@ -205,7 +203,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsSlideOutPanelVisible")]
-        internal string m_IsSlideOutPanelVisibleSerializable
+        public string m_IsSlideOutPanelVisibleSerializable
         {
             get => IsSlideOutPanelVisible.ToString();
             set
@@ -251,7 +249,7 @@ namespace RibbonXml
 
             #region INTERNALS
             [XmlElement("LeftBorderBrush")]
-            internal XmlElement m_LeftBorderBrushSerializable
+            public XmlElement m_LeftBorderBrushSerializable
             {
                 get
                 {
@@ -276,7 +274,7 @@ namespace RibbonXml
             }
 
             [XmlElement("RightBorderBrush")]
-            internal XmlElement m_RightBorderBrushSerializable
+            public XmlElement m_RightBorderBrushSerializable
             {
                 get
                 {

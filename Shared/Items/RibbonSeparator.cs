@@ -1,6 +1,5 @@
 using System; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
@@ -11,7 +10,6 @@ using Autodesk.Windows;
 #endif
 #endregion
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSeparator
@@ -36,7 +34,7 @@ namespace RibbonXml.Items
 
         #region INTERNALS
         [XmlAttribute("SeparatorStyle")]
-        internal string m_SeparatorStyleSerializable
+        public string m_SeparatorStyleSerializable
         {
             get => SeparatorStyle.ToString();
             set

@@ -1,10 +1,8 @@
 using System; // Keep for AutoCAD & .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml; // Keep for AutoCAD
 using System.Xml.Serialization; // Keep for AutoCAD
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items.CommandItems
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_ProgressBarSource
@@ -62,7 +60,7 @@ namespace RibbonXml.Items.CommandItems
 
         #region INTERNALS
         [XmlAttribute("HasCancelButton")]
-        internal string m_HasCancelButtonSerializable
+        public string m_HasCancelButtonSerializable
         {
             get => HasCancelButton.ToString();
             set
@@ -78,7 +76,7 @@ namespace RibbonXml.Items.CommandItems
         }
 
         [XmlElement("CurrentOperation")]
-        internal XmlCDataSection m_CurrentOperationCData
+        public XmlCDataSection m_CurrentOperationCData
         {
             get
             {
@@ -90,7 +88,7 @@ namespace RibbonXml.Items.CommandItems
         }
 
         [XmlAttribute("MaximumValue")]
-        internal string m_MaximumValueSerializable
+        public string m_MaximumValueSerializable
         {
             get => MaximumValue.ToString();
             set
@@ -111,7 +109,7 @@ namespace RibbonXml.Items.CommandItems
         }
 
         [XmlAttribute("MinimumValue")]
-        internal string m_MinimumValueSerializable
+        public string m_MinimumValueSerializable
         {
             get => MinimumValue.ToString();
             set
@@ -132,7 +130,7 @@ namespace RibbonXml.Items.CommandItems
         }
 
         [XmlAttribute("CurrentValue")]
-        internal string m_CurrentValueSerializable
+        public string m_CurrentValueSerializable
         {
             get => CurrentValue.ToString();
             set

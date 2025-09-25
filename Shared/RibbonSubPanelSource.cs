@@ -1,13 +1,11 @@
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml;
 using System.Xml.Serialization;
 
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource
@@ -71,11 +69,11 @@ namespace RibbonXml
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
+        public List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
         #endregion
 
         [XmlElement("Description")]
-        internal XmlCDataSection m_DescriptionCData
+        public XmlCDataSection m_DescriptionCData
         {
             get
             {
@@ -87,7 +85,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Name")]
-        internal XmlCDataSection m_NameCData
+        public XmlCDataSection m_NameCData
         {
             get
             {
@@ -99,7 +97,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Tag")]
-        internal XmlCDataSection m_TagCData
+        public XmlCDataSection m_TagCData
         {
             get
             {

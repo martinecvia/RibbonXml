@@ -1,6 +1,5 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Xml.Serialization;
+using System.ComponentModel; // Keep for .NET 4.6
+using System.Xml.Serialization; // Keep for .NET 4.6
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
 #if ZWCAD
@@ -10,7 +9,6 @@ using Autodesk.Windows;
 #endif
 #endregion
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonLabel

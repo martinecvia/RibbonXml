@@ -1,7 +1,6 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
@@ -14,7 +13,6 @@ using Autodesk.Windows;
 
 using RibbonXml.Items.CommandItems;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonRowPanel
@@ -53,7 +51,7 @@ namespace RibbonXml.Items
         public bool AreItemsArrangedFromRightToLeft { get; set; } = false;
 
         [XmlAttribute("AreItemsArrangedFromRightToLeft")]
-        internal string m_AreItemsArrangedFromRightToLeftSerializable
+        public string m_AreItemsArrangedFromRightToLeftSerializable
         {
             get => AreItemsArrangedFromRightToLeft.ToString();
             set
@@ -71,7 +69,7 @@ namespace RibbonXml.Items
         #region CONTENT
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         [XmlElement("RibbonSubPanelSource", typeof(RibbonSubPanelSourceDef))]
-        internal RibbonSubPanelSourceDef m_Source { get; set; } = null;
+        public RibbonSubPanelSourceDef m_Source { get; set; } = null;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         // RibbonItem
@@ -104,11 +102,11 @@ namespace RibbonXml.Items
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
+        public List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
         #endregion
 
         [XmlAttribute("ResizePriority")]
-        internal string m_ResizePrioritySerializable
+        public string m_ResizePrioritySerializable
         {
             get => ResizePriority.ToString();
             set
@@ -122,7 +120,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("SubPanelResizeStyle")]
-        internal string m_SubPanelResizeStyleSerializable
+        public string m_SubPanelResizeStyleSerializable
         {
             get => SubPanelResizeStyle.ToString();
             set
@@ -134,7 +132,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("IsTopJustified")]
-        internal string m_IsTopJustifiedSerializable
+        public string m_IsTopJustifiedSerializable
         {
             get => IsTopJustified.ToString();
             set
@@ -173,7 +171,7 @@ namespace RibbonXml.Items
             public RibbonSupportedSubPanelStyle SupportedSubPanel { get; set; } = RibbonSupportedSubPanelStyle.None;
 
             [XmlAttribute("SupportedSubPanel")]
-            internal string m_SupportedSubPanelSerializable
+            public string m_SupportedSubPanelSerializable
             {
                 get => SupportedSubPanel.ToString();
                 set
@@ -187,7 +185,7 @@ namespace RibbonXml.Items
 
             #region INTERNALS
             [XmlAttribute("MaxRowNumber")]
-            internal string m_MaxRowNumberSerializable
+            public string m_MaxRowNumberSerializable
             {
                 get => MaxRowNumber.ToString();
                 set
@@ -201,7 +199,7 @@ namespace RibbonXml.Items
             }
 
             [XmlAttribute("AreColumnsStatic")]
-            internal string m_AreColumnsStaticSerializable
+            public string m_AreColumnsStaticSerializable
             {
                 get => AreColumnsStatic.ToString();
                 set
@@ -252,7 +250,7 @@ namespace RibbonXml.Items
             public RibbonSupportedSubPanelStyle SupportedSubPanel { get; set; } = RibbonSupportedSubPanelStyle.None;
 
             [XmlAttribute("SupportedSubPanel")]
-            internal string m_SupportedSubPanelSerializable
+            public string m_SupportedSubPanelSerializable
             {
                 get => SupportedSubPanel.ToString();
                 set
@@ -266,7 +264,7 @@ namespace RibbonXml.Items
 
             #region INTERNALS
             [XmlAttribute("SubPanelResizeStyle")]
-            internal new string m_SubPanelResizeStyleSerializable
+            public new string m_SubPanelResizeStyleSerializable
             {
                 get => SubPanelResizeStyle.ToString();
                 set
@@ -278,7 +276,7 @@ namespace RibbonXml.Items
             }
 
             [XmlAttribute("DefaultSize")]
-            internal string m_DefaultSizeSerializable
+            public string m_DefaultSizeSerializable
             {
                 get => DefaultSize.ToString();
                 set
@@ -290,7 +288,7 @@ namespace RibbonXml.Items
             }
 
             [XmlAttribute("MaxSize")]
-            internal string m_MaxSizeSerializable
+            public string m_MaxSizeSerializable
             {
                 get => MaxSize.ToString();
                 set
@@ -302,7 +300,7 @@ namespace RibbonXml.Items
             }
 
             [XmlAttribute("MinSize")]
-            internal string m_MinSizeSerializable
+            public string m_MinSizeSerializable
             {
                 get => MinSize.ToString();
                 set

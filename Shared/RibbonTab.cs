@@ -1,11 +1,9 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml;
 using System.Xml.Serialization;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab
@@ -118,11 +116,11 @@ namespace RibbonXml
         [Description("Gets the collection used to store the panels in the tab. " +
             "The default is an empty collection.")]
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_Panels
-        internal List<RibbonPanelDef> m_Panels { get; set; } = new List<RibbonPanelDef>();
+        public List<RibbonPanelDef> m_Panels { get; set; } = new List<RibbonPanelDef>();
         #endregion
 
         [XmlElement("Title")]
-        internal XmlCDataSection m_TitleCData
+        public XmlCDataSection m_TitleCData
         {
             get
             {
@@ -134,7 +132,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Name")]
-        internal XmlCDataSection m_NameCData
+        public XmlCDataSection m_NameCData
         {
             get
             {
@@ -146,7 +144,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Description")]
-        internal XmlCDataSection m_DescriptionCData
+        public XmlCDataSection m_DescriptionCData
         {
             get
             {
@@ -158,7 +156,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsActive")]
-        internal string m_IsActiveSerializable
+        public string m_IsActiveSerializable
         {
             get => IsActive.ToString();
             set
@@ -174,7 +172,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsEnabled")]
-        internal string m_IsEnabledSerializable
+        public string m_IsEnabledSerializable
         {
             get => IsEnabled.ToString();
             set
@@ -190,7 +188,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsPanelEnabled")]
-        internal string m_IsPanelEnabledSerializable
+        public string m_IsPanelEnabledSerializable
         {
             get => IsPanelEnabled.ToString();
             set
@@ -206,7 +204,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsContextualTab")]
-        internal string m_IsContextualTabSerializable
+        public string m_IsContextualTabSerializable
         {
             get => IsContextualTab.ToString();
             set
@@ -222,7 +220,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsMergedContextualTab")]
-        internal string m_IsMergedContextualTabSerializable
+        public string m_IsMergedContextualTabSerializable
         {
             get => IsMergedContextualTab.ToString();
             set
@@ -238,7 +236,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("AllowTearOffContextualPanels")]
-        internal string m_AllowTearOffContextualPanelsSerializable
+        public string m_AllowTearOffContextualPanelsSerializable
         {
             get => AllowTearOffContextualPanels.ToString();
             set
@@ -254,7 +252,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Tag")]
-        internal XmlCDataSection m_TagCData
+        public XmlCDataSection m_TagCData
         {
             get
             {

@@ -1,11 +1,9 @@
 using System; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
 using RibbonXml.Items.CommandItems;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonCommandItem
@@ -49,7 +47,7 @@ namespace RibbonXml.Items
 
         #region INTERNALS
         [XmlAttribute("CommandHandler")]
-        internal string m_CommandHandlerSerializable
+        public string m_CommandHandlerSerializable
         {
             get => CommandHandler != null && CommandHandler is CommandHandler handler
                 ? handler.Command : string.Empty;

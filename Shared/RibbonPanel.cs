@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Xml;
 using System.Windows.Markup;
 using System.Xml.Serialization;
-using System.Runtime.CompilerServices;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
 #if ZWCAD
@@ -13,7 +12,6 @@ using Autodesk.Windows;
 #endif
 #endregion
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanel
@@ -121,11 +119,11 @@ namespace RibbonXml
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         [XmlElement("RibbonPanelSource", typeof(RibbonPanelSourceDef))]
         [XmlElement("RibbonPanelSpacer", typeof(RibbonPanelSourceDef.RibbonPanelSpacerDef))]
-        internal RibbonPanelSourceDef m_Source { get; set; } = null;
+        public RibbonPanelSourceDef m_Source { get; set; } = null;
         #endregion
 
         [XmlElement("CustomPanelBackground")]
-        internal XmlElement m_CustomPanelBackgroundSerializable
+        public XmlElement m_CustomPanelBackgroundSerializable
         {
             get
             {
@@ -150,7 +148,7 @@ namespace RibbonXml
         }
 
         [XmlElement("CustomSlideOutPanelBackground")]
-        internal XmlElement m_CustomSlideOutPanelBackgroundSerializable
+        public XmlElement m_CustomSlideOutPanelBackgroundSerializable
         {
             get
             {
@@ -175,7 +173,7 @@ namespace RibbonXml
         }
 
         [XmlElement("CustomPanelTitleBarBackground")]
-        internal XmlElement m_CustomPanelTitleBarBackgroundSerializable
+        public XmlElement m_CustomPanelTitleBarBackgroundSerializable
         {
             get
             {
@@ -200,7 +198,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("HighlightPanelTitleBar")]
-        internal string m_HighlightPanelTitleBarSerializable
+        public string m_HighlightPanelTitleBarSerializable
         {
             get => HighlightPanelTitleBar.ToString();
             set
@@ -217,7 +215,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("HighlightWhenCollapsed")]
-        internal string m_HighlightWhenCollapsedSerializable
+        public string m_HighlightWhenCollapsedSerializable
         {
             get => HighlightWhenCollapsed.ToString();
             set
@@ -234,7 +232,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsVisible")]
-        internal string m_IsVisibleSerializable
+        public string m_IsVisibleSerializable
         {
             get => IsVisible.ToString();
             set
@@ -250,7 +248,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsEnabled")]
-        internal string m_IsEnabledSerializable
+        public string m_IsEnabledSerializable
         {
             get => IsEnabled.ToString();
             set
@@ -266,7 +264,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("ResizeStyle")]
-        internal string m_ResizeStyleSerializable
+        public string m_ResizeStyleSerializable
         {
             get => ResizeStyle.ToString();
             set
@@ -278,7 +276,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("FloatingOrientation")]
-        internal string m_FloatingOrientationSerializable
+        public string m_FloatingOrientationSerializable
         {
             get => FloatingOrientation.ToString();
             set
@@ -290,7 +288,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("CanToggleOrientation")]
-        internal string m_CanToggleOrientationSerializable
+        public string m_CanToggleOrientationSerializable
         {
             get => CanToggleOrientation.ToString();
             set
@@ -307,7 +305,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsContextualTabThemeIgnored")]
-        internal string m_IsContextualTabThemeIgnoredSerializable
+        public string m_IsContextualTabThemeIgnoredSerializable
         {
             get => IsContextualTabThemeIgnored.ToString();
             set

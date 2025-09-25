@@ -1,4 +1,6 @@
-﻿using System; // Keep for .NET 4.6
+﻿#pragma warning disable CS0067
+
+using System; // Keep for .NET 4.6
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
 #if ZWCAD
@@ -56,7 +58,7 @@ namespace RibbonXml
 
             public override void Execute(object _)
             {
-                AcApp.Application.DocumentManager.MdiActiveDocument?
+                AcApp.Core.Application.DocumentManager.MdiActiveDocument?
                     .SendStringToExecute($"{_command} ", true, false, true);
             }
         }

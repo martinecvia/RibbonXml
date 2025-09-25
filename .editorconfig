@@ -3,6 +3,9 @@
 # CS8603: Může jít o vrácený odkaz null.
 dotnet_diagnostic.CS8603.severity = none
 
+# CS8622: Typy odkazů s možnou hodnotou null v typu parametru neodpovídají cílovému delegátu
+dotnet_diagnostic.CS8622.severity = none
+
 # CS8625: Literál null nejde převést na odkazový typ, který nemůže mít hodnotu null.
 dotnet_diagnostic.CS8625.severity = none
 

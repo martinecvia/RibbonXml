@@ -1,6 +1,5 @@
 using System; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -12,7 +11,6 @@ using Autodesk.Windows;
 #endif
 #endregion
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTextBox
@@ -135,7 +133,7 @@ namespace RibbonXml.Items
 
         #region INTERNALS
         [XmlAttribute("Orientation")]
-        internal string m_OrientationSerializable
+        public string m_OrientationSerializable
         {
             get => Orientation.ToString();
             set
@@ -149,7 +147,7 @@ namespace RibbonXml.Items
 #endif
         #region INTERNALS
         [XmlElement("Value")]
-        internal XmlCDataSection m_ValueCData
+        public XmlCDataSection m_ValueCData
         {
             get
             {
@@ -161,7 +159,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("ImageLocation")]
-        internal string m_ImageLocationSerializable
+        public string m_ImageLocationSerializable
         {
             get => ImageLocation.ToString();
             set
@@ -173,7 +171,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("ShowImageAsButton")]
-        internal string m_ShowImageAsButtonSerializable
+        public string m_ShowImageAsButtonSerializable
         {
             get => ShowImageAsButton.ToString();
             set
@@ -190,7 +188,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("SelectTextOnFocus")]
-        internal string m_SelectTextOnFocusSerializable
+        public string m_SelectTextOnFocusSerializable
         {
             get => SelectTextOnFocus.ToString();
             set
@@ -207,7 +205,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("AcceptTextOnLostFocus")]
-        internal string m_AcceptTextOnLostFocusSerializable
+        public string m_AcceptTextOnLostFocusSerializable
         {
             get => AcceptTextOnLostFocus.ToString();
             set
@@ -224,7 +222,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("InvokesCommand")]
-        internal string m_InvokesCommandSerializable
+        public string m_InvokesCommandSerializable
         {
             get => InvokesCommand.ToString();
             set
@@ -241,7 +239,7 @@ namespace RibbonXml.Items
         }
 
         [XmlElement("Prompt")]
-        internal XmlCDataSection m_PromptCData
+        public XmlCDataSection m_PromptCData
         {
             get
             {
@@ -253,7 +251,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("CommandHandler")]
-        internal string m_CommandHandlerSerializable
+        public string m_CommandHandlerSerializable
         {
             get => CommandHandler != null && CommandHandler is CommandHandler handler
                 ? handler.Command : string.Empty;
@@ -265,7 +263,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("IsEmptyTextValid")]
-        internal string m_IsEmptyTextValidSerializable
+        public string m_IsEmptyTextValidSerializable
         {
             get => IsEmptyTextValid.ToString();
             set
@@ -282,7 +280,7 @@ namespace RibbonXml.Items
         }
 
         [XmlAttribute("ResizableBoxWidth")]
-        internal string m_ResizableBoxWidthSerializable
+        public string m_ResizableBoxWidthSerializable
         {
             get => ResizableBoxWidth.ToString();
             set

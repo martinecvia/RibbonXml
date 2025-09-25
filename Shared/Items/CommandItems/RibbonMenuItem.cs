@@ -1,10 +1,8 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic;// Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml.Items.CommandItems
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonMenuItem
@@ -47,7 +45,7 @@ namespace RibbonXml.Items.CommandItems
         [XmlElement("RibbonMenuButton", typeof(RibbonListButtonDef.RibbonMenuButtonDef))]
         [XmlElement("RibbonRadioButtonGroup", typeof(RibbonListButtonDef.RibbonRadioButtonGroupDef))]
         [XmlElement("RibbonSplitButton", typeof(RibbonListButtonDef.RibbonSplitButtonDef))]
-        internal List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
+        public List<RibbonItemDef> m_Items { get; set; } = new List<RibbonItemDef>();
         #endregion
 
         // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_ApplicationMenuItem
@@ -94,7 +92,7 @@ namespace RibbonXml.Items.CommandItems
 
             #region INTERNALS
             [XmlAttribute("IsSplit")]
-            internal string m_IsSplitSerializable
+            public string m_IsSplitSerializable
             {
                 get => IsSplit.ToString();
                 set

@@ -1,7 +1,6 @@
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows.Media;
 using System.Xml;
 using System.Xml.Serialization;
@@ -21,7 +20,6 @@ using Autodesk.Windows.ToolBars;
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
 
-[assembly: InternalsVisibleTo("System.Xml.Serialization")]
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonItem
@@ -302,7 +300,7 @@ namespace RibbonXml
 
         #region INTERNALS
         [XmlElement("Text")]
-        internal XmlCDataSection m_TextCData
+        public XmlCDataSection m_TextCData
         {
             get
             {
@@ -314,21 +312,21 @@ namespace RibbonXml
         }
 
         [XmlAttribute("LargeImage")]
-        internal string m_LargeImageSerializable
+        public string m_LargeImageSerializable
         {
             get => LargeImage?.ToString() ?? "";
             set => LargeImage = RibbonDef.GetImageSource(value ?? "{fe5f6970-c86a-4119-ad96-a01ba4b2542b}");
         }
 
         [XmlAttribute("Image")]
-        internal string m_ImageSerializable
+        public string m_ImageSerializable
         {
             get => Image?.ToString() ?? "";
             set => Image = RibbonDef.GetImageSource(value ?? "{0c615a0b-631a-45ac-9e41-d37ec56c5f8c}");
         }
 
         [XmlElement("Tag")]
-        internal XmlCDataSection m_TagCData
+        public XmlCDataSection m_TagCData
         {
             get
             {
@@ -340,7 +338,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsToolTipEnabled")]
-        internal string m_IsToolTipEnabledSerializable
+        public string m_IsToolTipEnabledSerializable
         {
             get => IsToolTipEnabled.ToString();
             set
@@ -357,7 +355,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("ShowImage")]
-        internal string m_ShowImageSerializable
+        public string m_ShowImageSerializable
         {
             get => ShowImage.ToString();
             set
@@ -373,7 +371,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("MinWidth")]
-        internal string m_MinWidthSerializable
+        public string m_MinWidthSerializable
         {
             get => MinWidth.ToString();
             set
@@ -389,7 +387,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("Width")]
-        internal string m_WidthSerializable
+        public string m_WidthSerializable
         {
             get => Width.ToString();
             set
@@ -405,7 +403,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("ResizeStyle")]
-        internal string m_ResizeStyleSerializable
+        public string m_ResizeStyleSerializable
         {
             get => ResizeStyle.ToString();
             set
@@ -417,8 +415,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("Size")]
-        [XmlOut]
-        internal string m_SizeSerializable
+        public string m_SizeSerializable
         {
             get => Size.ToString();
             set
@@ -430,7 +427,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("ShowText")]
-        internal string m_ShowTextSerializable
+        public string m_ShowTextSerializable
         {
             get => ShowText.ToString();
             set
@@ -446,7 +443,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsVisible")]
-        internal string m_IsVisibleSerializable
+        public string m_IsVisibleSerializable
         {
             get => IsVisible.ToString();
             set
@@ -462,7 +459,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("IsEnabled")]
-        internal string m_IsEnabledSerializable
+        public string m_IsEnabledSerializable
         {
             get => IsEnabled.ToString();
             set
@@ -478,7 +475,7 @@ namespace RibbonXml
         }
 
         [XmlElement("Description")]
-        internal XmlCDataSection m_DescriptionCData
+        public XmlCDataSection m_DescriptionCData
         {
             get
             {
@@ -490,7 +487,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("ShowToolTipOnDisabled")]
-        internal string m_ShowToolTipOnDisabledSerializable
+        public string m_ShowToolTipOnDisabledSerializable
         {
             get => ShowToolTipOnDisabled.ToString();
             set
@@ -506,7 +503,7 @@ namespace RibbonXml
         }
 
         [XmlAttribute("AllowInToolBar")]
-        internal string m_AllowInToolBarSerializable
+        public string m_AllowInToolBarSerializable
         {
             get => AllowInToolBar.ToString();
             set
