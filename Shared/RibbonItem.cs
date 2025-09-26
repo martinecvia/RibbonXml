@@ -315,14 +315,18 @@ namespace RibbonXml
         public string m_LargeImageSerializable
         {
             get => LargeImage?.ToString() ?? "";
-            set => LargeImage = RibbonDef.GetImageSource(value ?? "{fe5f6970-c86a-4119-ad96-a01ba4b2542b}");
+            set => LargeImage = RibbonDef.GetImageSource(
+                value ?? "img_default_32",
+                "img_default_32.ico");
         }
 
         [XmlAttribute("Image")]
         public string m_ImageSerializable
         {
             get => Image?.ToString() ?? "";
-            set => Image = RibbonDef.GetImageSource(value ?? "{0c615a0b-631a-45ac-9e41-d37ec56c5f8c}");
+            set => Image = RibbonDef.GetImageSource(
+                value ?? "img_default_16",
+                "img_default_16.ico");
         }
 
         [XmlElement("Tag")]

@@ -36,7 +36,7 @@ namespace RibbonXml
         /// Determines whether the command can execute in its current state.
         /// Always returns <c>true</c> in this implementation.
         /// </summary>
-        /// <param name="parameter">Unused parameter.</param>
+        /// <param name="_">Unused parameter.</param>
         /// <returns><c>true</c> to indicate the command can always execute.</returns>
         public virtual bool CanExecute(object _) => true;
 

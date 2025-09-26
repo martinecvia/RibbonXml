@@ -4,9 +4,12 @@ using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
 using System.Linq; // Keep for .NET 4.6
 using System.IO;
+using System.Reflection;
 using System.Xml.Serialization;
 using System.Collections.Specialized;
-using System.Reflection;
+using System.Windows.Media.Imaging;
+
+using System.Diagnostics;
 
 #region O_PROGRAM_DETERMINE_CAD_PLATFORM 
 #if ZWCAD
@@ -25,7 +28,6 @@ using Autodesk.Windows;
 
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
-using System.Diagnostics;
 
 namespace RibbonXml
 {
@@ -34,47 +36,66 @@ namespace RibbonXml
         public const string RibbonTab__Prefix = "RP_TAB_";  // Our prefix for tabs. so we can distinguish
                                                             // other tab's from AutoCAD.
                                                             // This also prevents using the same name from different applications.
-        private RibbonControl Ribbon => ComponentManager.Ribbon;
-
-        private readonly Dictionary<string, CommandHandler> _handlers;
-        private readonly Dictionary<string, object> _registeredControls = new Dictionary<string, object>();
+        #region CONSTRUCTOR
+        private readonly Assembly _lsAssembly;
+        private readonly IReadOnlyDictionary<string, Type> _hwControllers;
+        private readonly IReadOnlyDictionary<string, CommandHandler> _hwHandlers;
+        private readonly Dictionary<string, BitmapImage> _mlImages;
+        private readonly Type _tPCommandHandler;
+        private RibbonDef(
+            Assembly lsAssembly,
+            Dictionary<string, Type> hwControllers,
+            Dictionary<string, CommandHandler> hwHandlers,
+            Dictionary<string, BitmapImage> mlImages,
+            Type hWCommandHandler = null)
+        {
+            _lsAssembly = lsAssembly;
+            _hwControllers = hwControllers;
+            _hwHandlers = hwHandlers;
+            _mlImages = mlImages;
+            _tPCommandHandler = hWCommandHandler;
+            Debug.WriteLine($"[&RibbonXml] Registered {GetType().FullName}\n" +
+                $"  FromAssembly: {lsAssembly?.GetName()}\n" +
+                $"  Handlers: {string.Join(",", hwHandlers.Keys)}\n" +
+                $"  Images: {string.Join(",", mlImages.Keys)}\n" +
+                $"  CommandHandler: {hWCommandHandler != null}\n" +
+                $"--- END OF STACK");
+        }
+        #endregion
+        // Managed control properties handling different states
         private readonly Dictionary<string, ContextualRibbonTab> _activeContextualTabs = new Dictionary<string, ContextualRibbonTab>();
         private readonly Dictionary<string, Func<SelectionSet, bool>> _contextualTabConditions
             = new Dictionary<string, Func<SelectionSet, bool>>();
-
-        private List<RibbonTab> _Tabs = new List<RibbonTab>();
-        private readonly Type _hWCommandHandler;
+        private readonly List<RibbonTab> _tabs = new List<RibbonTab>();
 
         // Used to avoid multiple instances of event registration 
         private volatile bool _hasTab = false;
         private volatile bool _hasContextual = false;
 
-        private RibbonDef(Assembly lsAssembly, string hwNamespace, 
-            Dictionary<string, CommandHandler> hwHandlers, Type hWCommandHandler)
-        {
-            ExecutingAssembly = lsAssembly;
-            ControlsNamespace = hwNamespace;
-            _handlers = hwHandlers;
-            _hWCommandHandler = hWCommandHandler;
-            System.Diagnostics.Debug.WriteLine($"[&] Registered RibbonController\n" +
-                $"  ExecutingAssembly: {ExecutingAssembly?.GetName()}\n" +
-                $"  ControlsNamespace: {ControlsNamespace ?? string.Empty}\n" +
-                $"  HasDefault: {hWCommandHandler != null}\n" +
-                $"  CustomHandlers: {string.Join(",", hwHandlers.Keys)}\n" +
-                $"--- END OF STACK");
-        }
+        private RibbonControl Ribbon => ComponentManager.Ribbon;
+
+        /// <summary>
+        /// Gets the list of ribbon tabs (read-only). 
+        /// You can add or remove tabs using AddTab/RemoveTab methods.
+        /// </summary>
+        public IReadOnlyList<RibbonTab> Tabs => _tabs.AsReadOnly();
 
         public RibbonTab CreateTab(string tabId, string tabName = null, string tabDescription = null)
             => CreateTab<RibbonTab>(tabId, tabName, tabDescription);
 
-        public ContextualRibbonTab CreateContextualTab(string tabId)
+        public ContextualRibbonTab CreateContextualTab(string tabId, string tabName = null, string tabDescription = null)
+            => CreateContextualTab<ContextualRibbonTab>(tabId, tabName, tabDescription);
+
+        public T CreateContextualTab<T>(string tabId,
+                                        string tabName = null,
+                                        string tabDescription = null) where T : ContextualRibbonTab, new()
         {
             string Id = tabId ?? throw new ArgumentNullException(nameof(tabId));
-            ContextualRibbonTab tab = (ContextualRibbonTab)Ribbon?.Tabs?
-                .FirstOrDefault(t => t is ContextualRibbonTab _contextualTab && t.Id == RibbonTab__Prefix + Id);
+            T tab = (T)Ribbon?.Tabs?
+                .FirstOrDefault(t => t is T _contextualTab && t.Id == RibbonTab__Prefix + Id);
             if (tab != null)
                 return tab;
-            tab = CreateTab<ContextualRibbonTab>(tabId);
+            tab = CreateTab<T>(tabId);
             tab.IsVisible = false;
             tab.IsContextualTab = true;
             ApplyOlderTheme(tab);
@@ -87,17 +108,54 @@ namespace RibbonXml
             return tab;
         }
 
-        public void SetCommandHandler(string command, CommandHandler handler) =>
-            _handlers[command] = handler;
-        
         #region INTERNALS
-        internal Assembly ExecutingAssembly { get; private set; }
-        internal string ControlsNamespace { get; private set; }
-        internal static System.Windows.Media.ImageSource GetImageSource(string resourceName)
+        internal static System.Windows.Media.ImageSource GetImageSource(string resourceName,
+            string fallback)
         {
+            if (resourceName == null && fallback == null) return null;
             if (Def == null)
                 throw new InvalidOperationException("RibbonDef instance is not built yet.");
-            Debug.WriteLine(resourceName);
+            // Return cached image if it exists
+            resourceName = resourceName ?? fallback;
+            // Resource was not found, but fallback was registered, returns fallback
+            if (Def._mlImages.TryGetValue(resourceName ?? fallback, out BitmapImage cached))
+                return cached;
+            if (!Def._mlImages.ContainsKey(resourceName)
+                && fallback != null && Def._mlImages.TryGetValue(fallback, out BitmapImage cachedFallback))
+                return cachedFallback;
+            if (fallback != null)
+            {
+                Assembly lsAssembly = Assembly.GetExecutingAssembly();
+                string fallbackPath = lsAssembly?.GetManifestResourceNames()
+                    .FirstOrDefault(r => r.EndsWith(fallback, StringComparison.OrdinalIgnoreCase));
+                if (fallbackPath != null)
+                {
+                    try
+                    {
+                        using (Stream stream = lsAssembly?.GetManifestResourceStream(fallbackPath))
+                        {
+                            if (stream == null) return null;
+                            BitmapImage bitMap = new BitmapImage();
+                            bitMap.BeginInit();
+                            // InOpt::CS7096: Stream is not usable as viable ImageSource stream
+                            bitMap.StreamSource = stream;
+                            bitMap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                            bitMap.EndInit();
+                            // To make it thread safe and immutable
+                            if (bitMap.CanFreeze)
+                                bitMap.Freeze();
+                            Def._mlImages[Path.GetFileNameWithoutExtension(fallback)] = bitMap;
+                            return bitMap;
+                        }
+                    }
+                    catch (System.Exception exception)
+                    {
+                        Def.LogException(exception);
+                        return null;
+                    }
+                }
+            }
             return null;
         }
 
@@ -111,14 +169,14 @@ namespace RibbonXml
                     return null;
                 if (Def == null)
                     throw new InvalidOperationException("RibbonDef instance is not built yet.");
-                if (Def._handlers.TryGetValue(command, out CommandHandler handler))
+                if (Def._hwHandlers.TryGetValue(command, out CommandHandler handler))
                     return handler;
             try
             {
-                if (Def._hWCommandHandler != null)
-                    return (CommandHandler)Activator.CreateInstance(Def._hWCommandHandler, command);
+                if (Def._tPCommandHandler != null)
+                    return (CommandHandler)Activator.CreateInstance(Def._tPCommandHandler, command);
             } catch (System.Exception) { }
-            return new CommandHandler.CommandHandlerDef(command); // default fallback
+            return new CommandHandler.CommandHandlerDef(command); // Default, which will just execute command
         }
 
         internal void HideContextualTab(ContextualRibbonTab _contextualTab)
@@ -212,13 +270,13 @@ namespace RibbonXml
                         // The contents of the collection changed dramatically
                         if (e.Action != NotifyCollectionChangedAction.Reset)
                             return;
-                        if (_Tabs.Count == 0 || Ribbon == null)
+                        if (_tabs.Count == 0 || Ribbon == null)
                             return;
                         // Defer to avoid reentrancy
                         Ribbon?.Dispatcher?.BeginInvoke(new Action(() =>
                         {
                             if (Ribbon == null) return;
-                            foreach (RibbonTab reAdd in _Tabs)
+                            foreach (RibbonTab reAdd in _tabs)
                             {
                                 // If for some reason tab still exists, ignore it
                                 if (Ribbon.Tabs.Contains(reAdd))
@@ -229,14 +287,14 @@ namespace RibbonXml
                                 // so we check if it was active before,
                                 // and make it active again
                                 reAdd.IsActive = wasActive;
-                                System.Diagnostics.Debug.WriteLine($"[&] Re-added: {reAdd.Id}");
+                                Debug.WriteLine($"[&RibbonXml] Refreshed: {reAdd.Id}");
                             }
                         }));
                     };
                     _hasTab = true;
                 }
             }
-            _Tabs.Add(tab);
+            _tabs.Add(tab);
             return tab;
         }
 
@@ -244,9 +302,10 @@ namespace RibbonXml
         {
             try
             {
-                string manifestResource = ExecutingAssembly.GetManifestResourceNames()
-                .FirstOrDefault(resource => resource.EndsWith($"{resourceName}.xml", StringComparison.OrdinalIgnoreCase));
-                using (Stream stream = ExecutingAssembly.GetManifestResourceStream(manifestResource))
+                string manifestResource = _lsAssembly.GetManifestResourceNames()
+                    .FirstOrDefault(resource => resource.EndsWith($"{resourceName}.xml", StringComparison.OrdinalIgnoreCase));
+                if (manifestResource == null) return default;
+                using (Stream stream = _lsAssembly.GetManifestResourceStream(manifestResource))
                 {
                     if (stream == null) return default;
                     try
@@ -457,33 +516,25 @@ namespace RibbonXml
 
         private void RegisterControl(object itemRef, BaseRibbonXml itemDef)
         {
-            if (!string.IsNullOrEmpty(itemDef.UUID) && !_registeredControls.ContainsKey(itemDef.UUID))
+            if (!string.IsNullOrEmpty(itemDef.Id) && _hwControllers.TryGetValue(itemDef.Id, out Type wrapperType))
             {
-                Type wrapperType = Assembly.GetExecutingAssembly()
-                    .GetType($"{ControlsNamespace}.{itemDef.Id}", false, true);
                 if (wrapperType != null)
                 {
                     try
                     {
-                        ConstructorInfo constructor = wrapperType.GetConstructors()?
+                        (wrapperType.GetConstructors()?
                             .FirstOrDefault(c =>
                             {
                                 ParameterInfo[] parameters = c.GetParameters();
                                 return parameters.Length == 2
                                     && parameters[0].ParameterType.IsAssignableFrom(itemRef.GetType())
                                     && parameters[1].ParameterType.IsAssignableFrom(itemDef.GetType());
-                            });
-                        if (constructor != null)
-                        {
-                            object invoke = constructor.Invoke(new object[] { itemRef, itemDef });
-                            if (invoke != null)
-                                _registeredControls.Add(itemDef.UUID, invoke);
-                        }
+                            }))?.Invoke(new object[] { itemRef, itemDef });
                     }
                     catch (System.Exception exception)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[&] Problem while registering {itemDef.GetType()}/{itemDef.Id}\n" +
-                            $"Control: {ControlsNamespace}.{itemDef.Id}\n" +
+                       Debug.WriteLine($"[&RibbonXml] Problem while registering {itemDef.GetType()}/Id:{itemDef.Id}\n" +
+                            $"Control: {wrapperType.FullName}\n" +
                             $"Message: {exception.Message}\n" +
                             $"--- END OF STACK");
                     }
@@ -540,7 +591,7 @@ namespace RibbonXml
             System.Exception currentException = exception;
             while (currentException != null)
             {
-                System.Diagnostics.Debug.WriteLine($"[&] {currentNest}:(InvalidOperationException): {currentException.Message}");
+                Debug.WriteLine($"[&RibbonXml] {currentNest}:({currentException.GetType().Name}): {currentException.Message}");
                 currentException = currentException.InnerException;
                 currentNest++;
             }
@@ -553,16 +604,18 @@ namespace RibbonXml
 
         #region BUILDER
         /// <summary>
-        /// Provides a registry for managing ribbon command handlers and building
-        /// a <see cref="RibbonDef"/> definition that can be used in ribbon UI initialization.
+        /// Builder for configuring ribbon tabs, command handlers, and images
+        /// before creating a <see cref="RibbonDef"/> instance.
         /// </summary>
-        public sealed class RibbonRegistry
+        public sealed class Builder
         {
+            private readonly Dictionary<string, Type> _controls = new Dictionary<string, Type>();
+            private readonly Dictionary<string, Tuple<string, BitmapImage>> _bitImages 
+                = new Dictionary<string, Tuple<string, BitmapImage>>();
             private readonly Dictionary<string, CommandHandler> _handlers
                 = new Dictionary<string, CommandHandler>();
 
             private Type _defaultHandler;
-            private string _controlsNamespace;
 
             /// <summary>
             /// Sets the default command handler type.
@@ -572,20 +625,14 @@ namespace RibbonXml
             /// that do not have an explicit handler assigned.
             /// </param>
             /// <returns>
-            /// The current <see cref="RibbonRegistry"/> instance (for fluent API).
+            /// The current <see cref="Builder"/> instance (for fluent API).
             /// </returns>
             /// <exception cref="ArgumentNullException">
             /// Thrown if <paramref name="handler"/> is <c>null</c>.
             /// </exception>
-            public RibbonRegistry SetDefaultHandler(Type handler)
+            public Builder SetDefaultHandler(Type handler)
             {
                 _defaultHandler = handler ?? throw new ArgumentNullException(nameof(handler));
-                return this;
-            }
-
-            public RibbonRegistry SetControlsNamespace(string controlsNamespace)
-            {
-                _controlsNamespace = controlsNamespace;
                 return this;
             }
 
@@ -594,34 +641,173 @@ namespace RibbonXml
             /// </summary>
             /// <param name="handler">The handler delegate associated with the command.</param>
             /// <returns>
-            /// The current <see cref="RibbonRegistry"/> instance (for fluent API).
+            /// The current <see cref="Builder"/> instance (for fluent API).
             /// </returns>
             /// <exception cref="ArgumentNullException">
             /// Thrown if <paramref name="handler"/> is <c>null</c>.
             /// </exception>
-            public RibbonRegistry AddCommandHandler(CommandHandler handler)
+            public Builder RegisterCommandHandler(CommandHandler handler)
             {
                 _handlers[handler.Command] = handler ?? throw new ArgumentNullException(nameof(handler));
                 return this;
             }
 
             /// <summary>
-            /// Builds a <see cref="RibbonDef"/> instance with the registered command handlers.
+            /// Registers a custom ribbon control type with a string identifier.
             /// </summary>
-            /// <param name="executingAssembly">
-            /// The assembly to associate with the <see cref="RibbonDef"/>.
-            /// If <c>null</c>, the calling assembly is used instead.
-            /// </param>
-            /// <returns>
-            /// A fully constructed <see cref="RibbonDef"/> object containing the registered
-            /// handlers and default handler type.
-            /// </returns>
-            public RibbonDef Build(Assembly executingAssembly)
+            /// <param name="Id">Unique identifier for the control.</param>
+            /// <param name="control">Type of the control (must inherit from RibbonControl).</param>
+            /// <returns>Current builder instance for fluent API.</returns>
+            public Builder RegisterControlsType<T>(string Id, Type control)
             {
-                RibbonDef def = new RibbonDef(executingAssembly ?? Assembly.GetCallingAssembly(),
-                                             _controlsNamespace,
-                                             new Dictionary<string, CommandHandler>(_handlers),
-                                             _defaultHandler);
+                if (string.IsNullOrEmpty(Id) && control == null
+                    && _controls.ContainsKey(Id) 
+                    && !typeof(RibbonControl).IsAssignableFrom(control))
+                {
+                    Debug.WriteLine($"[&RibbonXml] Builder Id:{Id} or control:{control} is null");
+                    return this; // Don't do anything
+                }
+                _controls[Id] = control;
+                return this;
+            }
+
+            /// <summary>
+            /// Registers an image from a file path, URI, or embedded resource.
+            /// </summary>
+            /// <param name="key">Unique key for the image.</param>
+            /// <param name="lsPathOrURI">Path, URI, or resource name of the image.</param>
+            /// <returns>Current builder instance.</returns>
+            public Builder RegisterImage(string key, string lsPathOrURI)
+            {
+                Debug.WriteLine($"[&RibbonXml] Registering (for:{key})'{lsPathOrURI}'");
+                if (!_bitImages.ContainsKey(key))
+#pragma warning disable CS8619 // Typ odkazu s možnou hodnotou null v hodnotě neodpovídá cílovému typu.
+                    _bitImages[key] = Tuple.Create(lsPathOrURI, (BitmapImage)null);
+#pragma warning restore CS8619 // Typ odkazu s možnou hodnotou null v hodnotě neodpovídá cílovému typu.
+                return this;
+            }
+
+            /// <summary>
+            /// Registers an already loaded <see cref="BitmapImage"/> with a key.
+            /// </summary>
+            /// <param name="key">Unique key for the image.</param>
+            /// <param name="bitMap">BitmapImage instance.</param>
+            /// <returns>Current builder instance.</returns>
+            public Builder RegisterImage(string key,  BitmapImage bitMap)
+            {
+                if (!_bitImages.ContainsKey(key))
+#pragma warning disable CS8619 // Typ odkazu s možnou hodnotou null v hodnotě neodpovídá cílovému typu.
+                    _bitImages[key] = Tuple.Create((string)null, bitMap);
+#pragma warning restore CS8619 // Typ odkazu s možnou hodnotou null v hodnotě neodpovídá cílovému typu.
+                return this;
+            }
+
+            /// <summary>
+            /// Builds a fully configured <see cref="RibbonDef"/> instance with all
+            /// registered controls, command handlers, and images.
+            /// </summary>
+            /// <returns>New <see cref="RibbonDef"/> object.</returns>
+            public RibbonDef Build()
+            {
+                Dictionary<string, BitmapImage> bitMaps = new Dictionary<string, BitmapImage>();
+                Assembly assembly = Assembly.GetCallingAssembly() ?? Assembly.GetExecutingAssembly();
+                foreach (KeyValuePair<string, Tuple<string, BitmapImage>> pair in _bitImages)
+                {
+                    // Not sure how this can happen, but let's keep it safe
+                    if (pair.Value.Item1 == null && pair.Value.Item2 == null) continue;
+                    if (pair.Value.Item2 != null)
+                    {
+                        // User passed valid BitMap
+                        bitMaps[pair.Key] = pair.Value.Item2;
+                        continue;
+                    }
+                    string lsURI = pair.Value.Item1;
+                    try
+                    {
+                        BitmapImage bitMap = null;
+                        // Handles IO.FilePath between UriKind.Absolute and UriKind.Relative
+                        string lsPath = Path.IsPathRooted(lsURI)
+                            ? lsURI
+                            : Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, lsURI);
+                        if (File.Exists(lsPath))
+                        {
+                            bitMap = new BitmapImage();
+                            bitMap.BeginInit();
+                            bitMap.UriSource = new Uri(lsPath, UriKind.Absolute);
+                            bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                            bitMap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitMap.EndInit();
+                            bitMap.Freeze();
+                        }
+                        else if (Uri.TryCreate(lsURI, UriKind.Absolute, out var URI) && URI.Scheme.StartsWith("http"))
+                        {
+                            bitMap = new BitmapImage();
+                            bitMap.BeginInit();
+                            bitMap.UriSource = URI;
+                            bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                            bitMap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitMap.EndInit();
+                            bitMap.Freeze();
+                        }
+                        else if (lsURI.StartsWith("pack://"))
+                        {
+                            bitMap = new BitmapImage();
+                            bitMap.BeginInit();
+                            bitMap.UriSource = new Uri(lsURI, UriKind.Absolute);
+                            bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                            bitMap.CacheOption = BitmapCacheOption.OnLoad;
+                            bitMap.EndInit();
+                            bitMap.Freeze();
+                        }
+                        else
+                        {
+                            using (Stream stream = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{lsURI}"))
+                            {
+                                if (stream == null || stream.Length < 4)
+                                    continue;
+                                byte[] header = new byte[4];
+                                stream.Read(header, 0, header.Length);
+                                // Checks if resolved image stream is a loadable image
+                                if (!((header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47) || // PNG (89 50 4E 47)
+                                    (header[0] == 0xFF && header[1] == 0xD8) ||                                             // JPG (FF D8)
+                                    (header[0] == 0x42 && header[1] == 0x4D) ||                                             // BMP (42 4D = "BM")
+                                    (header[0] == 0x00 && header[1] == 0x00 && header[2] == 0x01 && header[3] == 0x00) ||   // ICO (00 00 01 00)
+                                    (header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x38) ||   // GIF (ASCII "GIF8")
+                                    (header[0] == 0x49 && header[1] == 0x49 && header[2] == 0x2A) ||
+                                    (header[0] == 0x4D && header[1] == 0x4D && header[2] == 0x00 && header[3] == 0x2A)))    // TIFF ("II*" or "MM*")
+                                    continue;
+                                stream.Position = 0;          // Resets the stream back to the position it was before read,
+                                                              // this way we can check other formats not caught by header-types
+                                bitMap = new BitmapImage();
+                                bitMap.BeginInit();
+                                bitMap.StreamSource = stream;
+                                bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                                bitMap.CacheOption = BitmapCacheOption.OnLoad;
+                                bitMap.EndInit();
+                                // To make it thread safe and immutable
+                                bitMap.Freeze();
+                                // Final registration of images happens here
+                            }
+                        }
+                        if (bitMap != null)
+                            bitMaps[pair.Key] = bitMap;
+                    }
+                    catch (System.Exception exception)
+                    {
+                        Debug.WriteLine($"[&RibbonXml] Failed to load image:\n" +
+                            $"  Key: '{pair.Key}'\n" +
+                            $"  Path: '{lsURI}'\n" +
+                            $"  Message: {exception.Message}\n" +
+                            $"--- END OF STACK");
+                    }
+                }
+                RibbonDef def = new RibbonDef(
+                    assembly,
+                    new Dictionary<string, Type>(_controls),
+                    new Dictionary<string, CommandHandler>(_handlers),
+                    bitMaps,
+                    _defaultHandler
+                );
                 return DefPtr(def);
             }
         }
