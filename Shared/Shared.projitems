@@ -9,7 +9,7 @@
     <Import_RootNamespace>Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)BaseRibbonXml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RibbonBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CommandHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ControlHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\commanditems\ProgressBarSource.cs" />
@@ -28,7 +28,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonSlider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonSpinner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)items\RibbonTextBox.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)RibbonController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RibbonXml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RibbonItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RibbonPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RibbonPanelSource.cs" />

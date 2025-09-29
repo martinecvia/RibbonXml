@@ -9,7 +9,7 @@ using RibbonXml.Items.CommandItems;
 namespace RibbonXml
 {
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonSubPanelSource
-    public class RibbonSubPanelSourceDef : BaseRibbonXml
+    public class RibbonSubPanelSourceDef : RibbonBase
     {
         private string _cookie;
         public override string Cookie

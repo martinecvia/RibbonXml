@@ -31,7 +31,7 @@ using RibbonXml.Items.CommandItems;
 
 namespace RibbonXml
 {
-    public class RibbonDef
+    public class RibbonXml
     {
         public const string RibbonTab__Prefix = "RP_TAB_";  // Our prefix for tabs. so we can distinguish
                                                             // other tab's from AutoCAD.
@@ -42,7 +42,7 @@ namespace RibbonXml
         private readonly IReadOnlyDictionary<string, CommandHandler> _hwHandlers;
         private readonly Dictionary<string, BitmapImage> _mlImages;
         private readonly Type _tPCommandHandler;
-        private RibbonDef(
+        private RibbonXml(
             Assembly lsAssembly,
             Dictionary<string, Type> hwControllers,
             Dictionary<string, CommandHandler> hwHandlers,
@@ -54,23 +54,13 @@ namespace RibbonXml
             _hwHandlers = hwHandlers;
             _mlImages = mlImages;
             _tPCommandHandler = hWCommandHandler;
-            Debug.WriteLine($"[&RibbonXml] Registered {GetType().FullName}\n" +
-                $"  FromAssembly: {lsAssembly?.GetName()}\n" +
-                $"  Handlers: {string.Join(",", hwHandlers.Keys)}\n" +
-                $"  Images: {string.Join(",", mlImages.Keys)}\n" +
-                $"  CommandHandler: {hWCommandHandler != null}\n" +
-                $"--- END OF STACK");
         }
         #endregion
-        // Managed control properties handling different states
-        private readonly Dictionary<string, ContextualRibbonTab> _activeContextualTabs = new Dictionary<string, ContextualRibbonTab>();
-        private readonly Dictionary<string, Func<SelectionSet, bool>> _contextualTabConditions
-            = new Dictionary<string, Func<SelectionSet, bool>>();
-        private readonly List<RibbonTab> _tabs = new List<RibbonTab>();
 
-        // Used to avoid multiple instances of event registration 
-        private volatile bool _hasTab = false;
-        private volatile bool _hasContextual = false;
+        private readonly Dictionary<string, ContextualRibbonTab> _activeContextualTabs = new Dictionary<string, ContextualRibbonTab>();
+        private readonly Dictionary<(string, string), Func<SelectionSet, bool>> _contextualTabConditions
+            = new Dictionary<(string, string), Func<SelectionSet, bool>>();
+        private readonly List<RibbonTab> _tabs = new List<RibbonTab>();
 
         private RibbonControl Ribbon => ComponentManager.Ribbon;
 
@@ -86,6 +76,23 @@ namespace RibbonXml
         public ContextualRibbonTab CreateContextualTab(string tabId, string tabName = null, string tabDescription = null)
             => CreateContextualTab<ContextualRibbonTab>(tabId, tabName, tabDescription);
 
+        public ContextualRibbonTab CreateContextualTab(string tabId,
+            Func<SelectionSet, bool> onSelectionMatch,
+            string tabName = null, 
+            string tabDescription = null)
+        {
+            ContextualRibbonTab tab = CreateContextualTab<ContextualRibbonTab>(tabId, tabName, tabDescription);
+            if (onSelectionMatch != null)
+            {
+                var selection = (tab.Id, $"Selection={onSelectionMatch.GetHashCode()})");
+                if (_contextualTabConditions.Count == 0)
+                    AcApp.Core.Application.DocumentManager.MdiActiveDocument.ImpliedSelectionChanged += OnSelectionChanged;
+                _contextualTabConditions.TryAdd(selection, onSelectionMatch);
+            }
+            return tab;
+        }
+
+        private volatile bool _hasContextual = false;
         public T CreateContextualTab<T>(string tabId,
                                         string tabName = null,
                                         string tabDescription = null) where T : ContextualRibbonTab, new()
@@ -95,7 +102,7 @@ namespace RibbonXml
                 .FirstOrDefault(t => t is T _contextualTab && t.Id == RibbonTab__Prefix + Id);
             if (tab != null)
                 return tab;
-            tab = CreateTab<T>(tabId);
+            tab = CreateTab<T>(tabId, tabName, tabDescription);
             tab.IsVisible = false;
             tab.IsContextualTab = true;
             ApplyOlderTheme(tab);
@@ -113,18 +120,16 @@ namespace RibbonXml
             string fallback)
         {
             if (resourceName == null && fallback == null) return null;
-            if (Def == null)
-                throw new InvalidOperationException("RibbonDef instance is not built yet.");
+            if (ptr == null) throw new InvalidOperationException("RibbonDef instance is not built yet.");
             // Return cached image if it exists
             resourceName = resourceName ?? fallback;
             // Resource was not found, but fallback was registered, returns fallback
-            if (Def._mlImages.TryGetValue(resourceName ?? fallback, out BitmapImage cached))
-                return cached;
-            if (!Def._mlImages.ContainsKey(resourceName)
-                && fallback != null && Def._mlImages.TryGetValue(fallback, out BitmapImage cachedFallback))
-                return cachedFallback;
+            if (ptr._mlImages.TryGetValue(resourceName, out BitmapImage var0)) 
+                return var0;
             if (fallback != null)
             {
+                if (ptr._mlImages.TryGetValue(fallback, out BitmapImage var1))
+                    return var1;
                 Assembly lsAssembly = Assembly.GetExecutingAssembly();
                 string fallbackPath = lsAssembly?.GetManifestResourceNames()
                     .FirstOrDefault(r => r.EndsWith(fallback, StringComparison.OrdinalIgnoreCase));
@@ -137,7 +142,6 @@ namespace RibbonXml
                             if (stream == null) return null;
                             BitmapImage bitMap = new BitmapImage();
                             bitMap.BeginInit();
-                            // InOpt::CS7096: Stream is not usable as viable ImageSource stream
                             bitMap.StreamSource = stream;
                             bitMap.CacheOption = BitmapCacheOption.OnLoad;
                             bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
@@ -145,15 +149,10 @@ namespace RibbonXml
                             // To make it thread safe and immutable
                             if (bitMap.CanFreeze)
                                 bitMap.Freeze();
-                            Def._mlImages[Path.GetFileNameWithoutExtension(fallback)] = bitMap;
+                            ptr._mlImages[Path.GetFileNameWithoutExtension(fallback)] = bitMap;
                             return bitMap;
                         }
-                    }
-                    catch (System.Exception exception)
-                    {
-                        Def.LogException(exception);
-                        return null;
-                    }
+                    } catch (Exception) { return null; }
                 }
             }
             return null;
@@ -167,15 +166,15 @@ namespace RibbonXml
         {
                 if (string.IsNullOrEmpty(command))
                     return null;
-                if (Def == null)
+                if (ptr == null)
                     throw new InvalidOperationException("RibbonDef instance is not built yet.");
-                if (Def._hwHandlers.TryGetValue(command, out CommandHandler handler))
+                if (ptr._hwHandlers.TryGetValue(command, out CommandHandler handler))
                     return handler;
             try
             {
-                if (Def._tPCommandHandler != null)
-                    return (CommandHandler)Activator.CreateInstance(Def._tPCommandHandler, command);
-            } catch (System.Exception) { }
+                if (ptr._tPCommandHandler != null)
+                    return (CommandHandler)Activator.CreateInstance(ptr._tPCommandHandler, command);
+            } catch (Exception) { }
             return new CommandHandler.CommandHandlerDef(command); // Default, which will just execute command
         }
 
@@ -202,6 +201,7 @@ namespace RibbonXml
                 throw new InvalidOperationException("Ribbon can't be loaded using reflection or before application initializes properly.");
         }
 
+        private volatile bool _hasTab = false;
         private T CreateTab<T>(string tabId,
                                string tabName = null,
                                string tabDescription = null) where T : RibbonTab, new()
@@ -212,13 +212,13 @@ namespace RibbonXml
             if (Ribbon == null)
                 return new T();
             string Id = tabId ?? throw new ArgumentNullException(nameof(tabId));
-            T tab = (T)Ribbon.Tabs.FirstOrDefault(t => t.Id == RibbonTab__Prefix + Id);
+            T tab = (T)Ribbon?.Tabs?.FirstOrDefault(t => t.Id == RibbonTab__Prefix + Id);
             if (tab != null)
                 return tab; // We really don't want to process same tab multiple times,
                             // there is no point in that
             RibbonTabDef tabDef = LoadResourceRibbon(Id);
             tab = tabDef?.Transform(new T()) ?? new T();
-            Ribbon?.Tabs.Add(tab);
+            Ribbon?.Tabs?.Add(tab);
             tab.Id = RibbonTab__Prefix + Id;  // We want to mark these tabs as ours
                                               // For further compatibility and to prevent being overriden.
             if (tabDef != null)
@@ -248,7 +248,8 @@ namespace RibbonXml
                                                                                                             // even tho function has default value defined,
                                                                                                             // so some might think it will take the default value.
                                                                                                             // This is a compiler issue with .NET 4.6 NDP46-KB3045557-x86-x64
-                        if (itemRef != null) // null RibbonItem definitions will break cad instance
+                        // RibbonItem null definitions will break CAD ribbon instance
+                        if (itemRef != null)
                             panelRef.Source.Items.Add(itemRef);
                     }
                 }
@@ -281,13 +282,7 @@ namespace RibbonXml
                                 // If for some reason tab still exists, ignore it
                                 if (Ribbon.Tabs.Contains(reAdd))
                                     continue;
-                                bool wasActive = reAdd.IsActive;
                                 Ribbon.Tabs.Add(reAdd);
-                                // Adding ribbon to tab deactivates its IsActive state to default,
-                                // so we check if it was active before,
-                                // and make it active again
-                                reAdd.IsActive = wasActive;
-                                Debug.WriteLine($"[&RibbonXml] Refreshed: {reAdd.Id}");
                             }
                         }));
                     };
@@ -298,7 +293,7 @@ namespace RibbonXml
             return tab;
         }
 
-        public RibbonTabDef LoadResourceRibbon(string resourceName)
+        private RibbonTabDef LoadResourceRibbon(string resourceName)
         {
             try
             {
@@ -314,23 +309,9 @@ namespace RibbonXml
                         XmlSerializer serializer = new XmlSerializer(type, new XmlRootAttribute("RibbonTab"));
                         return (RibbonTabDef)serializer.Deserialize(stream);
                     }
-                    catch (InvalidOperationException exception)
-                    {
-                        LogException(exception);
-                        return default;
-                    }
-                    catch (Exception exception)
-                    {
-                        LogException(exception);
-                        return default;
-                    }
+                    catch (Exception) { return default; }
                 }
-            }
-            catch (Exception exception)
-            {
-                LogException(exception);
-                return default;
-            }
+            } catch (Exception) { return default; }
         }
 
         private void HideContextualTab(string _contextualId)
@@ -338,21 +319,20 @@ namespace RibbonXml
             if (_activeContextualTabs.ContainsKey(_contextualId)
                 && _activeContextualTabs[_contextualId] is ContextualRibbonTab _contextualTab)
             {
-                Ribbon?.HideContextualTab(_contextualTab);
-                _contextualTab.IsVisible = false;
+                _contextualTab.ShowReasons.Clear();
                 _activeContextualTabs.Remove(_contextualId);
+                Ribbon?.HideContextualTab(_contextualTab);
             }
         }
 
-        private void ShowContextualTab(string _contextualId)
+        private void ShowContextualTab(string _contextualId, string reason = "_manual")
         {
+            ContextualRibbonTab _contextualTab = (ContextualRibbonTab)Ribbon?.Tabs?.FirstOrDefault(t => t.Id == _contextualId && t is ContextualRibbonTab);
+            if (_contextualTab == null) // We dont need to draw or loop for tabs that does not exists anymore
+                return;
+            _contextualTab.AddShowReason($"Manual({(string.IsNullOrEmpty(reason) ? "_manual" : reason)})");
             if (!_activeContextualTabs.ContainsKey(_contextualId))
-            {
-                ContextualRibbonTab _contextualTab = (ContextualRibbonTab)Ribbon?.Tabs?.FirstOrDefault(t => t.Id == _contextualId && t is ContextualRibbonTab);
-                if (_contextualTab == null) // We dont need to draw or loop for tabs that does not exists anymore
-                    return;
                 _activeContextualTabs.Add(_contextualId, _contextualTab);
-            }
         }
 
         private void OnSelectionChanged(object sender, EventArgs eventArgs)
@@ -365,14 +345,18 @@ namespace RibbonXml
             PromptSelectionResult result = document.Editor.SelectImplied();
             if (result.Status != PromptStatus.OK || result.Value == null || result.Value.Count == 0)
             {
-                foreach (string Id in _contextualTabConditions.Keys)
+                foreach ((string _contextualId, string _) in _contextualTabConditions.Keys)
                 {
-                    RibbonTab _contextualTab = Ribbon?.Tabs?.FirstOrDefault(t => t.Id == Id);
+                    ContextualRibbonTab _contextualTab = (ContextualRibbonTab)Ribbon?.Tabs?.FirstOrDefault(t => t.Id == _contextualId && t is ContextualRibbonTab);
                     if (_contextualTab != null)
                     {
-                        Ribbon?.HideContextualTab(_contextualTab);
-                        _contextualTab.IsVisible = false;
-                        _activeContextualTabs.Remove(Id);
+                        // No selection is implied
+                        _contextualTab.ShowReasons.RemoveAll(r => r.StartsWith("Selection("));
+                        if (_contextualTab.CanHide)
+                        {
+                            _activeContextualTabs.Remove(_contextualId);
+                            Ribbon?.HideContextualTab(_contextualTab);
+                        }
                     }
                 }
                 return;
@@ -380,26 +364,30 @@ namespace RibbonXml
             SelectionSet selection = result.Value;
             if (selection != null)
             {
-                foreach (KeyValuePair<string, Func<SelectionSet, bool>> pair in _contextualTabConditions)
+                foreach (KeyValuePair<(string _contextualId, string _selectionId), Func<SelectionSet, bool>> pair in _contextualTabConditions)
                 {
                     if (pair.Value == null)
                         continue; // If for some reason Func<SelectionSet, bool>> will be null during tab creation
                                   // we will just skip handling this tab and treat it as normal one
                     ContextualRibbonTab _contextualTab;
-                    if (_activeContextualTabs.ContainsKey(pair.Key)) _contextualTab = _activeContextualTabs[pair.Key];
-                    else _contextualTab = (ContextualRibbonTab)Ribbon?.Tabs?.FirstOrDefault(t => t.Id == pair.Key && t is ContextualRibbonTab);
+                    if (_activeContextualTabs.TryGetValue(pair.Key._contextualId, out ContextualRibbonTab? value)) _contextualTab = value;
+                    else _contextualTab = (ContextualRibbonTab)Ribbon?.Tabs?.FirstOrDefault(t => t.Id == pair.Key._contextualId && t is ContextualRibbonTab);
                     if (_contextualTab == null) // We dont need to draw or loop for tabs that does not exists anymore
                         continue;
                     if (pair.Value.Invoke(selection))
                     {
-                        if (!_activeContextualTabs.ContainsKey(pair.Key))
-                            _activeContextualTabs.Add(pair.Key, _contextualTab);
+                        _contextualTab.AddShowReason($"Selection({pair.Key._selectionId})");
+                        if (!_activeContextualTabs.ContainsKey(pair.Key._contextualId))
+                            _activeContextualTabs.Add(pair.Key._contextualId, _contextualTab);
                     }
                     else
                     {
-                        Ribbon?.HideContextualTab(_contextualTab);
-                        _contextualTab.IsVisible = false;
-                        _activeContextualTabs.Remove(pair.Key);
+                        _contextualTab.DelShowReason($"Selection({pair.Key._selectionId})");
+                        if (_contextualTab.CanHide)
+                        {
+                            _activeContextualTabs.Remove(pair.Key._contextualId);
+                            Ribbon?.HideContextualTab(_contextualTab);
+                        }
                     }
                 }
             }
@@ -514,31 +502,21 @@ namespace RibbonXml
             return null;
         }
 
-        private void RegisterControl(object itemRef, BaseRibbonXml itemDef)
+        private void RegisterControl(object itemRef, RibbonBase itemDef)
         {
             if (!string.IsNullOrEmpty(itemDef.Id) && _hwControllers.TryGetValue(itemDef.Id, out Type wrapperType))
             {
-                if (wrapperType != null)
+                try
                 {
-                    try
-                    {
-                        (wrapperType.GetConstructors()?
-                            .FirstOrDefault(c =>
-                            {
-                                ParameterInfo[] parameters = c.GetParameters();
-                                return parameters.Length == 2
-                                    && parameters[0].ParameterType.IsAssignableFrom(itemRef.GetType())
-                                    && parameters[1].ParameterType.IsAssignableFrom(itemDef.GetType());
-                            }))?.Invoke(new object[] { itemRef, itemDef });
-                    }
-                    catch (System.Exception exception)
-                    {
-                       Debug.WriteLine($"[&RibbonXml] Problem while registering {itemDef.GetType()}/Id:{itemDef.Id}\n" +
-                            $"Control: {wrapperType.FullName}\n" +
-                            $"Message: {exception.Message}\n" +
-                            $"--- END OF STACK");
-                    }
-                }
+                    (wrapperType?.GetConstructors()?
+                        .FirstOrDefault(ctor =>
+                        {
+                            ParameterInfo[] parameters = ctor.GetParameters();
+                            return parameters.Length == 2
+                                && parameters[0].ParameterType.IsAssignableFrom(itemRef.GetType())
+                                && parameters[1].ParameterType.IsAssignableFrom(itemDef.GetType());
+                        }))?.Invoke(new object[] { itemRef, itemDef });
+                } catch (Exception) { }
             }
         }
 
@@ -584,28 +562,39 @@ namespace RibbonXml
             }
 #endif
         }
-        private void LogException(System.Exception exception)
-        {
-            // Log all nested exceptions
-            int currentNest = 1;
-            System.Exception currentException = exception;
-            while (currentException != null)
-            {
-                Debug.WriteLine($"[&RibbonXml] {currentNest}:({currentException.GetType().Name}): {currentException.Message}");
-                currentException = currentException.InnerException;
-                currentNest++;
-            }
-        }
         #endregion
-
+        /// <summary>
+        /// Represents a contextual Ribbon tab that can be shown for multiple reasons.
+        /// The tab remains visible as long as there is at least one active reason.
+        /// </summary>
         [XmlOut]
         public class ContextualRibbonTab : RibbonTab
-        { }
+        {
+            /// <summary>
+            /// Gets the list of reasons why this tab is currently shown.
+            /// Each reason keeps the tab visible until it is removed or Hidden manually.
+            /// </summary>
+            public List<string> ShowReasons { get; private set; } = new List<string>();
+            public virtual bool CanHide => ShowReasons.Count == 0;
+
+            public void AddShowReason(string reason)
+            {
+                if (!string.IsNullOrWhiteSpace(reason) && !ShowReasons.Contains(reason))
+                    ShowReasons.Add(reason);
+            }
+
+            public void DelShowReason(string reason)
+            {
+                if (!ShowReasons.Contains(reason))
+                    return;
+                ShowReasons.Remove(reason);
+            }
+        }
 
         #region BUILDER
         /// <summary>
         /// Builder for configuring ribbon tabs, command handlers, and images
-        /// before creating a <see cref="RibbonDef"/> instance.
+        /// before creating a <see cref="RibbonXml"/> instance.
         /// </summary>
         public sealed class Builder
         {
@@ -664,7 +653,6 @@ namespace RibbonXml
                     && _controls.ContainsKey(Id) 
                     && !typeof(RibbonControl).IsAssignableFrom(control))
                 {
-                    Debug.WriteLine($"[&RibbonXml] Builder Id:{Id} or control:{control} is null");
                     return this; // Don't do anything
                 }
                 _controls[Id] = control;
@@ -679,7 +667,6 @@ namespace RibbonXml
             /// <returns>Current builder instance.</returns>
             public Builder RegisterImage(string key, string lsPathOrURI)
             {
-                Debug.WriteLine($"[&RibbonXml] Registering (for:{key})'{lsPathOrURI}'");
                 if (!_bitImages.ContainsKey(key))
 #pragma warning disable CS8619 // Typ odkazu s možnou hodnotou null v hodnotě neodpovídá cílovému typu.
                     _bitImages[key] = Tuple.Create(lsPathOrURI, (BitmapImage)null);
@@ -693,7 +680,7 @@ namespace RibbonXml
             /// <param name="key">Unique key for the image.</param>
             /// <param name="bitMap">BitmapImage instance.</param>
             /// <returns>Current builder instance.</returns>
-            public Builder RegisterImage(string key,  BitmapImage bitMap)
+            public Builder RegisterImage(string key, BitmapImage bitMap)
             {
                 if (!_bitImages.ContainsKey(key))
 #pragma warning disable CS8619 // Typ odkazu s možnou hodnotou null v hodnotě neodpovídá cílovému typu.
@@ -703,11 +690,11 @@ namespace RibbonXml
             }
 
             /// <summary>
-            /// Builds a fully configured <see cref="RibbonDef"/> instance with all
+            /// Builds a fully configured <see cref="RibbonXml"/> instance with all
             /// registered controls, command handlers, and images.
             /// </summary>
-            /// <returns>New <see cref="RibbonDef"/> object.</returns>
-            public RibbonDef Build()
+            /// <returns>New <see cref="RibbonXml"/> object.</returns>
+            public RibbonXml Build()
             {
                 Dictionary<string, BitmapImage> bitMaps = new Dictionary<string, BitmapImage>();
                 Assembly assembly = Assembly.GetCallingAssembly() ?? Assembly.GetExecutingAssembly();
@@ -792,7 +779,7 @@ namespace RibbonXml
                         if (bitMap != null)
                             bitMaps[pair.Key] = bitMap;
                     }
-                    catch (System.Exception exception)
+                    catch (Exception exception)
                     {
                         Debug.WriteLine($"[&RibbonXml] Failed to load image:\n" +
                             $"  Key: '{pair.Key}'\n" +
@@ -801,7 +788,7 @@ namespace RibbonXml
                             $"--- END OF STACK");
                     }
                 }
-                RibbonDef def = new RibbonDef(
+                RibbonXml def = new RibbonXml(
                     assembly,
                     new Dictionary<string, Type>(_controls),
                     new Dictionary<string, CommandHandler>(_handlers),
@@ -812,14 +799,14 @@ namespace RibbonXml
             }
         }
         #endregion
-        private static RibbonDef Def { get; set; }
-        private static RibbonDef DefPtr(RibbonDef m_Instance)
+        private static RibbonXml ptr { get; set; }
+        private static RibbonXml DefPtr(RibbonXml m_Instance)
         {
             if (m_Instance == null)
                 throw new InvalidOperationException("RibbonDef instance is not allowed to be built reflectively.");
-            if (Def == null)
-                Def = m_Instance;
-            return Def;
+            if (ptr == null)
+                ptr = m_Instance;
+            return ptr;
         }
     }
 }

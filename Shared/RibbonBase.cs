@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace RibbonXml
 {
-    public abstract class BaseRibbonXml
+    public abstract class RibbonBase
     {
         public readonly string UUID = Guid.NewGuid().ToString("N").Substring(0, 8);
 
@@ -34,7 +34,7 @@ namespace RibbonXml
         /// - Properties must be public instance properties.<br/>
         /// - Properties are included only if decorated with <c>[XmlOut]</c> and their value is not <c>null</c>.<br/>
         /// - If a property's value is a collection (excluding strings), the output will list the items, joined by commas.<br/>
-        /// - If an item in the collection is of type <see cref="BaseRibbonXml"/>, its <c>ToString()</c> result is used.
+        /// - If an item in the collection is of type <see cref="RibbonBase"/>, its <c>ToString()</c> result is used.
         /// </remarks>
         /// <returns>
         /// A formatted string like: <c>ClassName(Property1=Value1, Property2=[Item1, Item2], ...)</c>.
@@ -52,7 +52,7 @@ namespace RibbonXml
                     if (value != null && value is IEnumerable enumerable && !(value is string))
                     {
                         var list = string.Join(", ", enumerable.Cast<object>()
-                            .Select(item => item is BaseRibbonXml xml ? xml.ToString() : item?.ToString()));
+                            .Select(item => item is RibbonBase xml ? xml.ToString() : item?.ToString()));
                         return $"{property.Name}=[{list}]";
                     }
                     return $"{property.Name}={value}";
@@ -69,7 +69,7 @@ namespace RibbonXml
         /// </summary>
         /// <typeparam name="Target">The type of the target object.</typeparam>
         /// <typeparam name="Source">
-        /// The type of the source object, which must derive from <see cref="BaseRibbonXml"/>.
+        /// The type of the source object, which must derive from <see cref="RibbonBase"/>.
         /// </typeparam>
         /// <param name="target">The object to receive the copied values.</param>
         /// <param name="source">The object providing the values.</param>
@@ -101,7 +101,7 @@ namespace RibbonXml
         /// </para>
         /// </remarks>
         internal static Target Transform<Target, Source>(Target target, Source source)
-            where Source : BaseRibbonXml
+            where Source : RibbonBase
         {
             if (target == null || source == null)
                 return default;
@@ -162,7 +162,7 @@ namespace RibbonXml
                             $"Has different type target:{targetProperty.PropertyType} from source:{sourceProperty.PropertyType}");
                     }
                 }
-                catch (System.Exception) // Keep for .NET 4.6
+                catch (Exception)
                 { }
             }
             return target;

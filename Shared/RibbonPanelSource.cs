@@ -26,7 +26,7 @@ namespace RibbonXml
         "The content is a collection of RibbonItem objects stored in an Items collection. " +
         "The items can be organized into multiple rows by adding a RibbonRowBreak item at the index at where a new row is to start. " +
         "The items can also be organized into two panels - main panel and slide-out panel - by adding a RibbonPanelBreak item at the index where the slide-out panel is to start.")]
-    public class RibbonPanelSourceDef : BaseRibbonXml
+    public class RibbonPanelSourceDef : RibbonBase
     {
         private string _cookie;
         public override string Cookie

@@ -10,7 +10,7 @@ namespace RibbonXml
     [XmlRoot("RibbonTab")]
     [Description("The class RibbonTab is used to store and manage the contents of a ribbon tab.")]
     public class RibbonTabDef
-        : BaseRibbonXml
+        : RibbonBase
     {
         private string _cookie;
         public override string Cookie

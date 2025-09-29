@@ -19,7 +19,7 @@ namespace RibbonXml
         /// <summary>
         /// Gets the strongly-typed reference to the underlying Ribbon definition.
         /// </summary>
-        public BaseRibbonXml Source { get; }
+        public RibbonBase Source { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ControlHandler{RibbonRef}"/> class.
@@ -35,7 +35,7 @@ namespace RibbonXml
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="target"/> is null or empty, or if <paramref name="source"/> is null.
         /// </exception>
-        public ControlHandler(RibbonRef target, BaseRibbonXml source)
+        public ControlHandler(RibbonRef target, RibbonBase source)
         {
             Target = target ?? throw new ArgumentNullException(nameof(target),
                 "Ribbon target reference cannot be null.");

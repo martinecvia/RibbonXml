@@ -17,7 +17,7 @@ namespace RibbonXml
     // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonPanel
     [Description("The class RibbonPanel is used to store and manage the panel in a ribbon. " +
         "RibbonPanel displays the content of the RibbonPanelSource set in the Source property.")]
-    public class RibbonPanelDef : BaseRibbonXml
+    public class RibbonPanelDef : RibbonBase
     {
         private string _cookie;
         public override string Cookie

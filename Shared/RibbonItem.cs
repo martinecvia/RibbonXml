@@ -50,7 +50,7 @@ namespace RibbonXml
     [XmlInclude(typeof(RibbonSliderDef))]
     [XmlInclude(typeof(RibbonSpinnerDef))]
     [XmlInclude(typeof(RibbonTextBoxDef))]
-    public class RibbonItemDef : BaseRibbonXml
+    public class RibbonItemDef : RibbonBase
     {
         private string _cookie;
         public override string Cookie
@@ -315,7 +315,7 @@ namespace RibbonXml
         public string m_LargeImageSerializable
         {
             get => LargeImage?.ToString() ?? "";
-            set => LargeImage = RibbonDef.GetImageSource(
+            set => LargeImage = RibbonXml.GetImageSource(
                 value ?? "img_default_32",
                 "img_default_32.ico");
         }
@@ -324,7 +324,7 @@ namespace RibbonXml
         public string m_ImageSerializable
         {
             get => Image?.ToString() ?? "";
-            set => Image = RibbonDef.GetImageSource(
+            set => Image = RibbonXml.GetImageSource(
                 value ?? "img_default_16",
                 "img_default_16.ico");
         }

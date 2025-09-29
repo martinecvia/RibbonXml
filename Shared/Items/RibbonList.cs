@@ -291,7 +291,7 @@ namespace RibbonXml.Items
                 set
                 {
                     if (!string.IsNullOrEmpty(value))
-                        CommandHandler = RibbonDef.GetHandler(value);
+                        CommandHandler = RibbonXml.GetHandler(value);
                 }
             }
 
