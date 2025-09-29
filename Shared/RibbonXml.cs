@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Xml.Serialization;
 using System.Collections.Specialized;
 using System.Windows.Media.Imaging;
+using System.Net;
 
 using System.Diagnostics;
 
@@ -28,7 +29,6 @@ using Autodesk.Windows;
 
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
-using System.Security.Policy;
 
 namespace RibbonXml
 {
@@ -624,15 +624,16 @@ namespace RibbonXml
         /// The type of the handler to use as default for commands
         /// that do not have an explicit handler assigned.
         /// </param>
-        /// <returns>
-        /// The current <see cref="Builder"/> instance (for fluent API).
-        /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="handler"/> is <c>null</c>.
         /// </exception>
+        /// <returns>Current <see cref="Builder"/> instance.</returns>
         public Builder SetDefaultHandler(Type handler)
         {
-            _defaultHandler = handler ?? throw new ArgumentNullException(nameof(handler));
+            if (handler == null) return this;
+            if (!typeof(CommandHandler).IsAssignableFrom(handler))
+                throw new ArgumentException($"CommandHandler must be of type {typeof(CommandHandler).FullName}", nameof(handler));
+            _defaultHandler = handler;
             return this;
         }
 
@@ -640,12 +641,10 @@ namespace RibbonXml
         /// Registers a command handler for a ribbon command.
         /// </summary>
         /// <param name="handler">The handler delegate associated with the command.</param>
-        /// <returns>
-        /// The current <see cref="Builder"/> instance (for fluent API).
-        /// </returns>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="handler"/> is <c>null</c>.
         /// </exception>
+        /// <returns>Current <see cref="Builder"/> instance.</returns>
         public Builder RegisterCommandHandler(CommandHandler handler)
         {
             _handlers[handler.Command] = handler ?? throw new ArgumentNullException(nameof(handler));
@@ -656,16 +655,16 @@ namespace RibbonXml
         /// Registers a custom ribbon control type with a string identifier.
         /// </summary>
         /// <param name="Id">Unique identifier for the control.</param>
-        /// <param name="control">Type of the control (must inherit from RibbonControl).</param>
-        /// <returns>Current builder instance for fluent API.</returns>
+        /// <param name="control">Type of the control (must inherit from <see cref="RibbonControl"/>).</param>
+        /// <returns>Current <see cref="Builder"/> instance.</returns>
         public Builder RegisterControlsType<T>(string Id, Type control)
         {
-            if (string.IsNullOrEmpty(Id) && control == null
-                && _controls.ContainsKey(Id) 
-                && !typeof(RibbonControl).IsAssignableFrom(control))
-            {
-                return this; // Don't do anything
-            }
+            if (string.IsNullOrEmpty(Id))
+                throw new ArgumentNullException(nameof(Id));
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (!typeof(RibbonControl).IsAssignableFrom(control))
+                throw new ArgumentException($"{control} must inherit RibbonControl", nameof(control));
             _controls[Id] = control;
             return this;
         }
@@ -675,7 +674,7 @@ namespace RibbonXml
         /// </summary>
         /// <param name="key">Unique key for the image.</param>
         /// <param name="lsPathOrURI">Path, URI, or resource name of the image.</param>
-        /// <returns>Current builder instance.</returns>
+        /// <returns>Current <see cref="Builder"/> instance.</returns>
         public Builder RegisterImage(string key, string lsPathOrURI)
         {
             if (!_bitImages.ContainsKey(key))
@@ -689,8 +688,8 @@ namespace RibbonXml
         /// Registers an already loaded <see cref="BitmapImage"/> with a key.
         /// </summary>
         /// <param name="key">Unique key for the image.</param>
-        /// <param name="bitMap">BitmapImage instance.</param>
-        /// <returns>Current builder instance.</returns>
+        /// <param name="bitMap"><see cref="BitmapImage"/> instance.</param>
+        /// <returns>Current <see cref="Builder"/> instance.</returns>
         public Builder RegisterImage(string key, BitmapImage bitMap)
         {
             if (!_bitImages.ContainsKey(key))
@@ -722,7 +721,7 @@ namespace RibbonXml
                 string lsURI = pair.Value.Item1;
                 try
                 {
-                    BitmapImage bitMap;
+                    BitmapImage bitMap = null;
                     // Handles IO.FilePath between UriKind.Absolute and UriKind.Relative
                     string lsPath = Path.IsPathRooted(lsURI)
                         ? lsURI
@@ -731,20 +730,41 @@ namespace RibbonXml
                     if (File.Exists(lsPath))
                         URI = new Uri(lsPath, UriKind.Absolute);
                     else if (Uri.TryCreate(lsURI, UriKind.Absolute, out var var0) && var0.Scheme.StartsWith("http"))
-                        URI = var0;
+                    {
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+#pragma warning disable SYSLIB0014 // WebRequest, HttpWebRequest, ServicePoint, WebClient jsou zastaralé
+                        using (WebClient client = new WebClient())
+                        {
+                            byte[] data = client.DownloadData(var0);
+                            using (MemoryStream stream = new MemoryStream(data))
+                            {
+                                if (stream == null)
+                                    continue;
+                                bitMap = new BitmapImage();
+                                bitMap.BeginInit();
+                                bitMap.StreamSource = stream;
+                                bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                                bitMap.CacheOption = BitmapCacheOption.OnLoad;
+                                bitMap.EndInit();
+                                // To make it thread safe and immutable
+                                bitMap.Freeze();
+                            }
+                        }
+#pragma warning restore SYSLIB0014 // WebRequest, HttpWebRequest, ServicePoint, WebClient jsou zastaralé
+                    }
                     else if (lsURI.StartsWith("pack://"))
                         URI = new Uri(lsURI, UriKind.Absolute);
-
                     if (URI != null)
                     {
-                        bitMap = new BitmapImage(URI);
+                        bitMap = new BitmapImage();
                         bitMap.BeginInit();
+                        bitMap.UriSource = URI;
                         bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
                         bitMap.CacheOption = BitmapCacheOption.OnLoad;
                         bitMap.EndInit();
                         bitMap.Freeze();
                     }
-                    else
+                    else if (bitMap == null)
                     {
                         using (Stream stream = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{lsURI}"))
                         {
@@ -782,10 +802,10 @@ namespace RibbonXml
                         $"  Key: '{pair.Key}'\n" +
                         $"  Path: '{lsURI}'\n" +
                         $"  Message: {exception.Message}\n" +
+                        $"  TracE: {exception.StackTrace}\n" +
                         $"--- END OF STACK");
                 }
             }
-            Debug.WriteLine($"Registered: {string.Join(",", bitMaps)}");
             RibbonXml def = new RibbonXml(
                 assembly,
                 new Dictionary<string, Type>(_controls),
