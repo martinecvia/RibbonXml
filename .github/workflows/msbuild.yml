@@ -24,10 +24,6 @@ jobs:
     - name: Install .NET Framework 4.7 Developer Pack
       run: |
         choco install netfx-4.7-devpack -y --no-progress
-
-    - name: Install .NET Framework 4.8 Developer Pack
-      run: |
-        choco install netfx-4.8-devpack -y --no-progress
         
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
