@@ -1,4 +1,4 @@
-using System;
+using System; // Keep for .NET 4.6
 
 namespace RibbonXml
 {
@@ -7,14 +7,14 @@ namespace RibbonXml
     /// Provides a strongly-typed reference to the underlying Ribbon item
     /// and stores its associated <c>Id</c> for identification.
     /// </summary>
-    /// <typeparam name="RibbonRef">The type of the underlying Ribbon item (e.g., RibbonLabel, RibbonButton).</typeparam>
-    public abstract class ControlHandler<RibbonRef>
-        where RibbonRef : class, new()
+    /// <typeparam name="R">The type of the underlying Ribbon item (e.g., RibbonLabel, RibbonButton).</typeparam>
+    public abstract class ControlHandler<R>
+        where R : class, new()
     {
         /// <summary>
         /// Gets the strongly-typed reference to the underlying Ribbon item.
         /// </summary>
-        public RibbonRef Target { get; }
+        public R Target { get; }
 
         /// <summary>
         /// Gets the strongly-typed reference to the underlying Ribbon definition.
@@ -22,7 +22,7 @@ namespace RibbonXml
         public RibbonBase Source { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ControlHandler{RibbonRef}"/> class.
+        /// Initializes a new instance of the <see cref="ControlHandler{R}"/> class.
         /// </summary>
         /// <param name="target">
         /// A reference to the underlying Ribbon item instance.
@@ -35,7 +35,7 @@ namespace RibbonXml
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="target"/> is null or empty, or if <paramref name="source"/> is null.
         /// </exception>
-        public ControlHandler(RibbonRef target, RibbonBase source)
+        public ControlHandler(R target, RibbonBase source)
         {
             Target = target ?? throw new ArgumentNullException(nameof(target),
                 "Ribbon target reference cannot be null.");

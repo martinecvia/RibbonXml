@@ -39,16 +39,16 @@ namespace RibbonXml
                                                             // This also prevents using the same name from different applications.
         #region CONSTRUCTOR
         private readonly Assembly _lsAssembly;
-        private readonly IReadOnlyDictionary<string, Type> _hwControllers;
+        private readonly IReadOnlyDictionary<string, string> _hwControllers;
         private readonly IReadOnlyDictionary<string, CommandHandler> _hwHandlers;
         private readonly Dictionary<string, BitmapImage> _mlImages;
-        private readonly Type _tPCommandHandler;
+        private readonly string _tPCommandHandler;
         internal RibbonXml(
             Assembly lsAssembly,
-            Dictionary<string, Type> hwControllers,
+            Dictionary<string, string> hwControllers,
             Dictionary<string, CommandHandler> hwHandlers,
             Dictionary<string, BitmapImage> mlImages,
-            Type hWCommandHandler = null)
+            string hWCommandHandler = null)
         {
             _lsAssembly = lsAssembly;
             _hwControllers = hwControllers;
@@ -175,7 +175,7 @@ namespace RibbonXml
             try
             {
                 if (ptr._tPCommandHandler != null)
-                    return (CommandHandler)Activator.CreateInstance(ptr._tPCommandHandler, command);
+                    return (CommandHandler)Activator.CreateInstance(Type.GetType(ptr._tPCommandHandler), command);
             } catch (Exception) { }
             return new CommandHandler.CommandHandlerDef(command); // Default, which will just execute command
         }
@@ -307,8 +307,7 @@ namespace RibbonXml
                     if (stream == null) return default;
                     try
                     {
-                        Type type = typeof(RibbonTabDef);
-                        XmlSerializer serializer = new XmlSerializer(type, new XmlRootAttribute("RibbonTab"));
+                        XmlSerializer serializer = new XmlSerializer(typeof(RibbonTabDef), new XmlRootAttribute("RibbonTab"));
                         return (RibbonTabDef)serializer.Deserialize(stream);
                     }
                     catch (Exception) { return default; }
@@ -506,11 +505,11 @@ namespace RibbonXml
 
         private void RegisterControl(object itemRef, RibbonBase itemDef)
         {
-            if (!string.IsNullOrEmpty(itemDef.Id) && _hwControllers.TryGetValue(itemDef.Id, out Type wrapperType))
+            if (!string.IsNullOrEmpty(itemDef.Id) && _hwControllers.TryGetValue(itemDef.Id, out string hwWrapper))
             {
                 try
                 {
-                    (wrapperType?.GetConstructors()?
+                    (Type.GetType(hwWrapper)?.GetConstructors()?
                         .FirstOrDefault(ctor =>
                         {
                             ParameterInfo[] parameters = ctor.GetParameters();
@@ -609,13 +608,13 @@ namespace RibbonXml
     /// </summary>
     public sealed class Builder
     {
-        private readonly Dictionary<string, Type> _controls = new Dictionary<string, Type>();
+        private readonly Dictionary<string, string> _controls = new Dictionary<string, string>();
         private readonly Dictionary<string, Tuple<string, BitmapImage>> _bitImages 
             = new Dictionary<string, Tuple<string, BitmapImage>>();
         private readonly Dictionary<string, CommandHandler> _handlers
             = new Dictionary<string, CommandHandler>();
 
-        private Type _defaultHandler;
+        private string _defaultHandler;
 
         /// <summary>
         /// Sets the default command handler type.
@@ -633,7 +632,7 @@ namespace RibbonXml
             if (handler == null) return this;
             if (!typeof(CommandHandler).IsAssignableFrom(handler))
                 throw new ArgumentException($"CommandHandler must be of type {typeof(CommandHandler).FullName}", nameof(handler));
-            _defaultHandler = handler;
+            _defaultHandler = handler.AssemblyQualifiedName;
             return this;
         }
 
@@ -665,7 +664,7 @@ namespace RibbonXml
                 throw new ArgumentNullException(nameof(control));
             if (!typeof(RibbonControl).IsAssignableFrom(control))
                 throw new ArgumentException($"{control} must inherit RibbonControl", nameof(control));
-            _controls[Id] = control;
+            _controls[Id] = control.AssemblyQualifiedName;
             return this;
         }
 
@@ -719,42 +718,59 @@ namespace RibbonXml
                     continue;
                 }
                 string lsURI = pair.Value.Item1;
+                if (string.IsNullOrWhiteSpace(lsURI))
+                    continue;
                 try
                 {
                     BitmapImage bitMap = null;
-                    // Handles IO.FilePath between UriKind.Absolute and UriKind.Relative
-                    string lsPath = Path.IsPathRooted(lsURI)
-                        ? lsURI
-                        : Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, lsURI);
                     Uri URI = null;
-                    if (File.Exists(lsPath))
-                        URI = new Uri(lsPath, UriKind.Absolute);
-                    else if (Uri.TryCreate(lsURI, UriKind.Absolute, out var var0) && var0.Scheme.StartsWith("http"))
+                    if (Uri.TryCreate(lsURI, UriKind.Absolute, out var var0))
                     {
-                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-#pragma warning disable SYSLIB0014 // WebRequest, HttpWebRequest, ServicePoint, WebClient jsou zastaralé
-                        using (WebClient client = new WebClient())
+                        if (var0.IsFile)
                         {
-                            byte[] data = client.DownloadData(var0);
-                            using (MemoryStream stream = new MemoryStream(data))
+                            string lcPath = var0.LocalPath;
+                            try
                             {
-                                if (stream == null)
-                                    continue;
-                                bitMap = new BitmapImage();
-                                bitMap.BeginInit();
-                                bitMap.StreamSource = stream;
-                                bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
-                                bitMap.CacheOption = BitmapCacheOption.OnLoad;
-                                bitMap.EndInit();
-                                // To make it thread safe and immutable
-                                bitMap.Freeze();
-                            }
+                                if (File.Exists(lcPath))
+                                    URI = new Uri(lcPath, UriKind.Absolute);
+                            } catch (Exception) { }
                         }
+                        else if (var0.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+#pragma warning disable SYSLIB0014 // WebRequest, HttpWebRequest, ServicePoint, WebClient jsou zastaralé
+                            using (WebClient client = new WebClient())
+                            {
+                                byte[] data = client.DownloadData(var0);
+                                using (MemoryStream stream = new MemoryStream(data))
+                                {
+                                    if (stream == null)
+                                        continue;
+                                    bitMap = new BitmapImage();
+                                    bitMap.BeginInit();
+                                    bitMap.StreamSource = stream;
+                                    bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
+                                    bitMap.CacheOption = BitmapCacheOption.OnLoad;
+                                    bitMap.EndInit();
+                                    // To make it thread safe and immutable
+                                    bitMap.Freeze();
+                                }
+                            }
 #pragma warning restore SYSLIB0014 // WebRequest, HttpWebRequest, ServicePoint, WebClient jsou zastaralé
+                        }
+                        else if (var0.Scheme.StartsWith("pack", StringComparison.OrdinalIgnoreCase))
+                            URI = new Uri(lsURI, UriKind.Absolute);
                     }
-                    else if (lsURI.StartsWith("pack://"))
-                        URI = new Uri(lsURI, UriKind.Absolute);
-                    if (URI != null)
+                    if (URI == null && bitMap == null)
+                    {
+                        URI = (Path.IsPathRooted(lsURI) 
+                                ? lsURI 
+                                : Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, lsURI))
+                            ) is string lsPath && File.Exists(lsPath) 
+                            ? new Uri(lsPath, UriKind.Absolute)
+                            : null;
+                    }
+                    if (URI != null && bitMap == null)
                     {
                         bitMap = new BitmapImage();
                         bitMap.BeginInit();
@@ -762,11 +778,21 @@ namespace RibbonXml
                         bitMap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
                         bitMap.CacheOption = BitmapCacheOption.OnLoad;
                         bitMap.EndInit();
-                        bitMap.Freeze();
+                        if (bitMap.CanFreeze)
+                            bitMap.Freeze();
                     }
-                    else if (bitMap == null)
+
+                    if (bitMap == null)
                     {
-                        using (Stream stream = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{lsURI}"))
+                        string[] manifest = assembly.GetManifestResourceNames();
+                        string resourceName = assembly.GetManifestResourceNames()
+                            .FirstOrDefault(r => string.Equals(r, lsURI, StringComparison.OrdinalIgnoreCase))
+                            ?? manifest.FirstOrDefault(r => r.EndsWith("." + Path.GetFileName(lsURI), StringComparison.OrdinalIgnoreCase))
+                            ?? manifest.FirstOrDefault(r => r.EndsWith(lsURI, StringComparison.OrdinalIgnoreCase));
+                        // Resource does not have valid name
+                        if (resourceName == null)
+                            continue;
+                        using (Stream stream = assembly.GetManifestResourceStream(resourceName))
                         {
                             if (stream == null || stream.Length < 4)
                                 continue;
@@ -782,7 +808,7 @@ namespace RibbonXml
                                 (header[0] == 0x4D && header[1] == 0x4D && header[2] == 0x00 && header[3] == 0x2A)))    // TIFF ("II*" or "MM*")
                                 continue;
                             stream.Position = 0;          // Resets the stream back to the position it was before read,
-                                                            // this way we can check other formats not caught by header-types
+                                                          // this way we can check other formats not caught by header-types
                             bitMap = new BitmapImage();
                             bitMap.BeginInit();
                             bitMap.StreamSource = stream;
@@ -790,7 +816,8 @@ namespace RibbonXml
                             bitMap.CacheOption = BitmapCacheOption.OnLoad;
                             bitMap.EndInit();
                             // To make it thread safe and immutable
-                            bitMap.Freeze();
+                            if (bitMap.CanFreeze)
+                                bitMap.Freeze();
                         }
                     }
                     if (bitMap != null)
@@ -802,13 +829,13 @@ namespace RibbonXml
                         $"  Key: '{pair.Key}'\n" +
                         $"  Path: '{lsURI}'\n" +
                         $"  Message: {exception.Message}\n" +
-                        $"  TracE: {exception.StackTrace}\n" +
+                        $"  Trace: {exception.StackTrace}\n" +
                         $"--- END OF STACK");
                 }
             }
             RibbonXml def = new RibbonXml(
                 assembly,
-                new Dictionary<string, Type>(_controls),
+                new Dictionary<string, string>(_controls),
                 new Dictionary<string, CommandHandler>(_handlers),
                 bitMaps,
                 _defaultHandler

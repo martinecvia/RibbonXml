@@ -46,16 +46,9 @@ namespace RibbonXml
         /// <param name="_">Unused parameter.</param>
         public abstract void Execute(object _);
 
-        internal class CommandHandlerDef : CommandHandler
+        internal sealed class CommandHandlerDef : CommandHandler
         {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="CommandHandlerDef"/> class
-            /// with the specified command string.
-            /// </summary>
-            /// <param name="command">The CAD command string associated with this handler.</param>
-            public CommandHandlerDef(string command) : base(command)
-            { }
-
+            public CommandHandlerDef(string command) : base(command) { }
             public override void Execute(object _)
             {
                 AcApp.Core.Application.DocumentManager.MdiActiveDocument?

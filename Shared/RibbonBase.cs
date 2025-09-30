@@ -11,6 +11,7 @@ namespace RibbonXml
 {
     public abstract class RibbonBase
     {
+        [XmlIgnore]
         public readonly string UUID = Guid.NewGuid().ToString("N").Substring(0, 8);
 
         [XmlOut]
