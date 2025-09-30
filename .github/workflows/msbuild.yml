@@ -42,11 +42,11 @@ jobs:
 
     # Build .NET 4.6 project
     - name: Build .NET 4.6 (ACAD)
-      run: msbuild References/AcadNet46/AcadNet46.csproj /t:Restore /p:Configuration=Release
+      run: msbuild References/AcadNet46/AcadNet46.csproj /t:Restore,Build /p:Configuration=Release
 
     # Build .NET 4.7 project (ZWCAD)
     - name: Build .NET 4.7 (ZCAD)
-      run: msbuild References/ZcadNet47/ZcadNet47.csproj /t:Restore /p:Configuration=Release /p:DefineConstants=ZWCAD
+      run: msbuild References/ZcadNet47/ZcadNet47.csproj /t:Restore,Build /p:Configuration=Release /p:DefineConstants=ZWCAD
 
     # Build .NET 8.0 project
     - name: Build .NET 8.0 (ACAD) (Test 80)
