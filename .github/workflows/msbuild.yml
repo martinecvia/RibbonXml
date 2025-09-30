@@ -1,6 +1,7 @@
 name: MSBuild
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "master" ]
   pull_request:
@@ -41,11 +42,11 @@ jobs:
 
     # Build .NET 4.6 project
     - name: Build .NET 4.6 (ACAD)
-      run: msbuild References/AcadNet46/AcadNet46.csproj /p:Configuration=Release
+      run: msbuild References/AcadNet46/AcadNet46.csproj /t:Restore /p:Configuration=Release
 
     # Build .NET 4.7 project (ZWCAD)
     - name: Build .NET 4.7 (ZCAD)
-      run: msbuild References/ZcadNet47/ZcadNet47.csproj /p:Configuration=Release /p:DefineConstants=ZWCAD
+      run: msbuild References/ZcadNet47/ZcadNet47.csproj /t:Restore /p:Configuration=Release /p:DefineConstants=ZWCAD
 
     # Build .NET 8.0 project
     - name: Build .NET 8.0 (ACAD) (Test 80)
@@ -73,8 +74,8 @@ jobs:
       if: github.ref == 'refs/heads/master'
       with:
         # Generate version string: YYYY.MM.run_number
-        tag_name: alfa.v${{ github.run_number }}
-        name: Release v${{ github.run_number }}
+        tag_name: v0.0.${{ github.run_number }}-alpha
+        name: Release v0.0.${{ github.run_number }}-alpha
         draft: false
         prerelease: false
         files: RibbonXml.zip
