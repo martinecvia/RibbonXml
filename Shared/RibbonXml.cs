@@ -662,8 +662,8 @@ namespace RibbonXml
                 throw new ArgumentNullException(nameof(Id));
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
-            if (!typeof(RibbonControl).IsAssignableFrom(control))
-                throw new ArgumentException($"{control} must inherit RibbonControl", nameof(control));
+            if (!control.IsGenericType || control.GetGenericTypeDefinition() != typeof(ControlHandler<>))
+                throw new ArgumentException($"{control} must inherit ControlHandler", nameof(control));
             _controls[Id] = control.AssemblyQualifiedName;
             return this;
         }
