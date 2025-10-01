@@ -1,4 +1,4 @@
-﻿#define NON_VOLATILE_MEMORY
+#define NON_VOLATILE_MEMORY
 
 using System; // Keep for .NET 4.6
 using System.Collections.Generic; // Keep for .NET 4.6
@@ -797,7 +797,7 @@ namespace RibbonXml
                             if (stream == null || stream.Length < 4)
                                 continue;
                             byte[] header = new byte[4];
-                            stream.Read(header, 0, header.Length);
+                            stream.ReadExactly(header);
                             // Checks if resolved image stream is a loadable image
                             if (!((header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47) || // PNG (89 50 4E 47)
                                 (header[0] == 0xFF && header[1] == 0xD8) ||                                             // JPG (FF D8)
