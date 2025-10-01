@@ -2,19 +2,28 @@ using System; // Keep for .NET 4.6
 
 namespace RibbonXml
 {
+    public interface IControlHandler
+    {
+        /// <summary>
+        /// Gets the strongly-typed reference to the underlying Ribbon definition.
+        /// </summary>
+        RibbonBase Source { get; }
+        object TargetObject { get; }
+    }
     /// <summary>
     /// Base class for all Ribbon control wrappers.
     /// Provides a strongly-typed reference to the underlying Ribbon item
     /// and stores its associated <c>Id</c> for identification.
     /// </summary>
     /// <typeparam name="R">The type of the underlying Ribbon item (e.g., RibbonLabel, RibbonButton).</typeparam>
-    public abstract class ControlHandler<R>
+    public abstract class ControlHandler<R> : IControlHandler
         where R : class, new()
     {
         /// <summary>
         /// Gets the strongly-typed reference to the underlying Ribbon item.
         /// </summary>
         public R Target { get; }
+        object IControlHandler.TargetObject => Target;
 
         /// <summary>
         /// Gets the strongly-typed reference to the underlying Ribbon definition.

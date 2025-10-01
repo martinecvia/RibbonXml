@@ -29,6 +29,7 @@ using Autodesk.Windows;
 
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
+using ZwSoft.Private.Windows;
 
 namespace RibbonXml
 {
@@ -654,17 +655,13 @@ namespace RibbonXml
         /// Registers a custom ribbon control type with a string identifier.
         /// </summary>
         /// <param name="Id">Unique identifier for the control.</param>
-        /// <param name="control">Type of the control (must inherit from <see cref="RibbonControl"/>).</param>
         /// <returns>Current <see cref="Builder"/> instance.</returns>
-        public Builder RegisterControlsType<T>(string Id, Type control)
+        public Builder RegisterControlsType<T>(string id)
+            where T : IControlHandler
         {
-            if (string.IsNullOrEmpty(Id))
-                throw new ArgumentNullException(nameof(Id));
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-            if (!control.IsGenericType || control.GetGenericTypeDefinition() != typeof(ControlHandler<>))
-                throw new ArgumentException($"{control} must inherit ControlHandler", nameof(control));
-            _controls[Id] = control.AssemblyQualifiedName;
+            if (string.IsNullOrEmpty(id))
+                throw new ArgumentNullException(nameof(id));
+            _controls[id] = typeof(T).AssemblyQualifiedName;
             return this;
         }
 
