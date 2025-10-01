@@ -797,7 +797,12 @@ namespace RibbonXml
                             if (stream == null || stream.Length < 4)
                                 continue;
                             byte[] header = new byte[4];
+#if NET8_0_OR_GREATER
                             stream.ReadExactly(header);
+#else
+                            stream.Read(header, 0, header.Length);
+#endif
+
                             // Checks if resolved image stream is a loadable image
                             if (!((header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47) || // PNG (89 50 4E 47)
                                 (header[0] == 0xFF && header[1] == 0xD8) ||                                             // JPG (FF D8)
@@ -843,5 +848,5 @@ namespace RibbonXml
             return RibbonXml.DefPtr(def);
         }
     }
-    #endregion
+#endregion
 }
