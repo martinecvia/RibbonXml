@@ -81,6 +81,19 @@ namespace RibbonXml
 
         [XmlOut]
         [XmlIgnore]
+        [DefaultValue(true)]
+        [Description("Gets or sets the value that indicates whether the tab is visible in the ribbon. " +
+            "If the value is true, the tab is visible in the ribbon. " +
+            "If the value is false, it is hidden in ribbon. " +
+            "Both visible and hidden tabs are available in the ribbon by right-clicking the menu under the Tabs menu option, which allows the user to show or hide the tabs. " +
+            "If the tab's IsAnonymous property is set to false, it is not included in the right-click menu, and the user cannot control its visibility. " +
+            "If an active tab is hidden, the next or previous visible tab is set as the active tab. " +
+            "The default value is true.")]
+        // https://help.autodesk.com/view/OARX/2026/CSY/?guid=OARX-ManagedRefGuide-Autodesk_Windows_RibbonTab_IsVisible
+        public bool IsVisible { get; set; } = true;
+
+        [XmlOut]
+        [XmlIgnore]
         [DefaultValue(false)]
         public bool IsMergedContextualTab { get; set; } = false;
 
@@ -216,6 +229,22 @@ namespace RibbonXml
                     return;
                 }
                 IsContextualTab = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [XmlAttribute("IsVisible")]
+        public string m_IsVisibleSerializable
+        {
+            get => IsVisible.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    // Passing the default value
+                    IsVisible = true;
+                    return;
+                }
+                IsVisible = value.Trim().Equals("TRUE", StringComparison.CurrentCultureIgnoreCase);
             }
         }
 
