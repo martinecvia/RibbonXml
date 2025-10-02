@@ -1,7 +1,7 @@
 # RibbonXml
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/martinecvia/RibbonXml/msbuild.yml)](https://github.com/martinecvia/RibbonXml/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/martinecvia/RibbonXml/github-ci.yml)](https://github.com/martinecvia/RibbonXml/actions)
 [![CodeFactor](https://www.codefactor.io/repository/github/martinecvia/ribbonxml/badge)](https://www.codefactor.io/repository/github/martinecvia/ribbonxml)
 [![Last Commit](https://img.shields.io/github/last-commit/martinecvia/RibbonXml)](https://github.com/martinecvia/RibbonXml/commits/main)
 [![AutoCAD Versions](https://img.shields.io/badge/AutoCAD-2017→2026-orange.svg)](https://www.autodesk.com)
