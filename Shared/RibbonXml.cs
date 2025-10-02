@@ -29,7 +29,6 @@ using Autodesk.Windows;
 
 using RibbonXml.Items;
 using RibbonXml.Items.CommandItems;
-using ZwSoft.Private.Windows;
 
 namespace RibbonXml
 {
